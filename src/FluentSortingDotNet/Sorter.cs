@@ -12,21 +12,49 @@ namespace FluentSortingDotNet;
 /// <typeparam name="T">The type of items to sort.</typeparam>
 public abstract class Sorter<T>
 {
-    private static readonly List<SortParameter> EmptySortParameters = new(0);
-    private readonly List<ISortableParameter<T>> _sortableParameters = new();
+    private readonly Dictionary<string, ISortableParameter<T>> _parameters;
+    private readonly HashSet<ISortableParameter<T>> _defaultParameters = [];
 
     /// <summary>
-    /// Creates a new <see cref="SortParameterBuilder{T, TProperty}"/> for the specified property.
+    /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
-    /// <typeparam name="TProperty">The type of the property to sort.</typeparam>
-    /// <param name="expression">The lambda expression that represents the property to sort.</param>
-    /// <returns>A new <see cref="SortParameterBuilder{T, TProperty}"/> instance.</returns>
-    protected SortParameterBuilder<T, TProperty> ForParameter<TProperty>(Expression<Func<T, TProperty>> expression)
+    protected Sorter()
     {
-        var parameter = new SortableParameter<T, TProperty>(expression);
-        _sortableParameters.Add(parameter);
-        return new SortParameterBuilder<T, TProperty>(parameter);
+        var builder = new SortBuilder<T>();
+        Configure(builder);
+
+        List<ISortableParameter<T>> parameters = builder.Build();
+
+        _parameters = new(parameters.Count);
+
+        foreach (ISortableParameter<T> parameter in parameters)
+        {
+#if NET8_0_OR_GREATER
+            if (!_parameters.TryAdd(parameter.Name, parameter))
+            {
+                throw new InvalidOperationException($"The parameter name '{parameter.Name}' is already in use.");
+            }
+#else
+            if (_parameters.ContainsKey(parameter.Name))
+            {
+                throw new InvalidOperationException($"The parameter name '{parameter.Name}' is already in use.");
+            }
+
+            _parameters[parameter.Name] = parameter;
+#endif
+
+            if (parameter.DefaultDirection.HasValue)
+            {
+                _defaultParameters.Add(parameter);
+            }
+        }
     }
+
+    /// <summary>
+    /// Configures the sorter with the sort parameters.
+    /// </summary>
+    /// <param name="builder">The builder to use to configure the sorter.</param>
+    protected abstract void Configure(SortBuilder<T> builder);
 
     /// <summary>
     /// Sorts the specified query using the default sort parameters.
@@ -34,7 +62,23 @@ public abstract class Sorter<T>
     /// <param name="query">The query to sort.</param>
     /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
     public SortResult<T> SortDefault(IQueryable<T> query)
-        => Sort(query, EmptySortParameters);
+        => Sort(query, []);
+
+    private SortResult<T> GetAllInvalidParameters(SortParameter sourceParameter, IEnumerator<SortParameter> enumerator)
+    {
+        List<SortParameter> invalidSortParameters = [sourceParameter];
+
+        while (enumerator.MoveNext())
+        {
+            SortParameter sortParameter = enumerator.Current;
+            if (!_parameters.ContainsKey(sortParameter.Name))
+            {
+                invalidSortParameters.Add(sortParameter);
+            }
+        }
+
+        return SortResult<T>.Invalid(invalidSortParameters);
+    }
 
     /// <summary>
     /// Sorts the specified query using the specified sort parameters.
@@ -44,63 +88,43 @@ public abstract class Sorter<T>
     /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
     public SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
     {
-        List<SortParameter> invalidSortParameters = new();
-        List<string> missingSortParameterNames = new();
-        Dictionary<string, CombinedSortParameter<T>> combinedSortParameterMap = new();
+        var first = true;
+        IEnumerator<SortParameter> enumerator = sortParameters.GetEnumerator();
 
-        foreach (SortParameter sortParameter in sortParameters)
+        while (enumerator.MoveNext())
         {
-            ISortableParameter<T>? sortableParameter = _sortableParameters.FirstOrDefault(x => x.Name == sortParameter.Name);
-            if (sortableParameter == null)
+            SortParameter sortParameter = enumerator.Current;
+            if (_parameters.TryGetValue(sortParameter.Name, out ISortableParameter<T>? sortableParameter))
             {
-                invalidSortParameters.Add(sortParameter);
+                query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
+                first = false;
             }
             else
             {
-                combinedSortParameterMap[sortParameter.Name] = new(sortableParameter, sortParameter);
+                return GetAllInvalidParameters(sortParameter, enumerator);
             }
         }
 
-        foreach (ISortableParameter<T> sortableParameter in _sortableParameters)
+        if (first)
         {
-            if (sortableParameter.IsRequired && !combinedSortParameterMap.ContainsKey(sortableParameter.Name))
+            foreach (ISortableParameter<T> defaultParameter in _defaultParameters)
             {
-                missingSortParameterNames.Add(sortableParameter.Name);
+                query = SortParameter(query, first, defaultParameter.Expression, defaultParameter.DefaultDirection!.Value);
+                first = false;
             }
-        }
-
-        if (invalidSortParameters.Count > 0 || missingSortParameterNames.Count > 0)
-        {
-            return SortResult<T>.Invalid(invalidSortParameters, missingSortParameterNames);
-        }
-
-        if (combinedSortParameterMap.Count == 0)
-        {
-            // add default sort parameters
-            foreach (ISortableParameter<T> defaultParameter in _sortableParameters.Where(x => x.DefaultDirection.HasValue))
-            {
-                combinedSortParameterMap[defaultParameter.Name] = new(defaultParameter, new(defaultParameter.Name, defaultParameter.DefaultDirection!.Value));
-            }
-        }
-
-        var first = true;
-        foreach (KeyValuePair<string, CombinedSortParameter<T>> entry in combinedSortParameterMap)
-        {
-            query = SortParameter(query, first, entry.Value.SortableParameter.Expression, entry.Value.SortParameter.Direction);
-            first = false;
         }
 
         return SortResult<T>.Valid((IOrderedQueryable<T>)query);
     }
 
-    private IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
+    private static IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
     {
-        if (!first && query is IOrderedQueryable<T> orderedQuery)
+        if (!first)
         {
             return direction switch
             {
-                SortDirection.Ascending => orderedQuery.ThenBy(expression),
-                SortDirection.Descending => orderedQuery.ThenByDescending(expression),
+                SortDirection.Ascending => ((IOrderedQueryable<T>)query).ThenBy(expression),
+                SortDirection.Descending => ((IOrderedQueryable<T>)query).ThenByDescending(expression),
                 _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
             };
         }

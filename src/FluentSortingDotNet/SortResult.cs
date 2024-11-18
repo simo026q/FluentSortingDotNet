@@ -11,7 +11,6 @@ namespace FluentSortingDotNet;
 public sealed class SortResult<T>
 {
     private static readonly List<SortParameter> EmptyInvalidSortParameters = new(0);
-    private static readonly List<string> EmptyMissingSortParameterNames = new(0);
 
     private readonly IOrderedQueryable<T>? _query;
 
@@ -27,20 +26,14 @@ public sealed class SortResult<T>
     public List<SortParameter> InvalidSortParameters { get; }
 
     /// <summary>
-    /// Required sort parameters that were missing from the query.
-    /// </summary>
-    public List<string> MissingSortParameterNames { get; }
-
-    /// <summary>
     /// Indicates whether the query is valid.
     /// </summary>
     public bool IsValid => _query != null;
 
-    private SortResult(IOrderedQueryable<T>? query, List<SortParameter> invalidSortParameters, List<string> missingSortParameterNames)
+    private SortResult(IOrderedQueryable<T>? query, List<SortParameter>? invalidSortParameters)
     {
         _query = query;
-        InvalidSortParameters = invalidSortParameters;
-        MissingSortParameterNames = missingSortParameterNames;
+        InvalidSortParameters = invalidSortParameters ?? EmptyInvalidSortParameters;
     }
 
     /// <summary>
@@ -50,9 +43,9 @@ public sealed class SortResult<T>
     public IOrderedQueryable<T>? GetQueryOrDefault()
         => _query;
 
-    internal static SortResult<T> Invalid(List<SortParameter> invalidSortParameters, List<string> missingSortParameterNames)
-        => new(null, invalidSortParameters, missingSortParameterNames);
+    internal static SortResult<T> Invalid(List<SortParameter> invalidSortParameters)
+        => new(null, invalidSortParameters);
 
     internal static SortResult<T> Valid(IOrderedQueryable<T> query)
-        => new(query, EmptyInvalidSortParameters, EmptyMissingSortParameterNames);
+        => new(query, null);
 }

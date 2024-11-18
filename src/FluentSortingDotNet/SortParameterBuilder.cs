@@ -28,16 +28,6 @@ public sealed class SortParameterBuilder<T, TProperty>
     }
 
     /// <summary>
-    /// Marks the parameter as required.
-    /// </summary>
-    /// <returns>The current builder instance.</returns>
-    public SortParameterBuilder<T, TProperty> Required()
-    {
-        _parameter.IsRequired = true;
-        return this;
-    }
-
-    /// <summary>
     /// Specifies a custom name of the parameter.
     /// </summary>
     /// <param name="name">The name of the parameter.</param>
