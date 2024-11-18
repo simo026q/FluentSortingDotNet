@@ -57,11 +57,11 @@ public sealed class Person
     }
 }
 
-public sealed class PersonSorter : ParsingSorter<Person>
+public sealed class PersonSorter(ISortParameterParser parser) : ParsingSorter<Person>(parser)
 {
-    public PersonSorter(ISortParameterParser parser) : base(parser)
+    protected override void Configure(SortBuilder<Person> builder)
     {
-        ForParameter(p => p.Name).Default(SortDirection.Descending);
-        ForParameter(p => p.Age);
+        builder.ForParameter(x => x.Name).Name("name").Default(SortDirection.Ascending);
+        builder.ForParameter(x => x.Age).Name("age").Default(SortDirection.Ascending);
     }
 }
