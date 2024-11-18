@@ -12,7 +12,9 @@
 	<Version>1.0.0-alpha.2</Version>
 	<NeutralLanguage>en</NeutralLanguage>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-	<Copyright>2024 simo026q</Copyright>
+	<Copyright>© 2024 simo026q</Copyright>
+	<PackageProjectUrl>https://github.com/simo026q/FluentSortingDotNet</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/simo026q/FluentSortingDotNet</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
