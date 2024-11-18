@@ -9,14 +9,9 @@ var sorter = new PersonSorter(parser);
 
 Console.WriteLine("Type 'exit' to quit.");
 
-string? query;
+string query;
 while ((query = GetInput("Enter sort query: ")) != "exit")
 {
-    if (string.IsNullOrWhiteSpace(query))
-    {
-        continue;
-    }
-
     SortResult<Person> result = sorter.Sort(people.AsQueryable(), query.AsSpan());
     if (result.IsValid)
     {
@@ -25,14 +20,13 @@ while ((query = GetInput("Enter sort query: ")) != "exit")
     else
     {
         Console.WriteLine($"Invalid sort parameters: {string.Join(", ", result.InvalidSortParameters.Select(x => $"{(x.Direction == SortDirection.Descending ? "-" : "")}{x.Name}"))}");
-        Console.WriteLine($"Missing sort parameter names: {string.Join(", ", result.MissingSortParameterNames)}");
     }
 }
 
-static string? GetInput(string prompt)
+static string GetInput(string prompt)
 {
     Console.Write(prompt);
-    return Console.ReadLine();
+    return Console.ReadLine() ?? string.Empty;
 }
 
 public sealed class Person
@@ -61,7 +55,7 @@ public sealed class PersonSorter(ISortParameterParser parser) : ParsingSorter<Pe
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
-        builder.ForParameter(x => x.Name).Name("name").Default(SortDirection.Ascending);
-        builder.ForParameter(x => x.Age).Name("age").Default(SortDirection.Ascending);
+        builder.ForParameter(x => x.Name).Name("name");
+        builder.ForParameter(x => x.Age).Name("age").Default(SortDirection.Descending);
     }
 }
