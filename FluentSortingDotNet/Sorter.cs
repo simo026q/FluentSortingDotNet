@@ -12,6 +12,7 @@ public abstract class Sorter<T>
     private readonly List<ISortableParameter<T>> _sortableParameters = new();
 
     protected SortParameterBuilder<T, TProperty> SortFor<TProperty>(Expression<Func<T, TProperty>> expression)
+    protected SortParameterBuilder<T, TProperty> ForParameter<TProperty>(Expression<Func<T, TProperty>> expression)
     {
         var parameter = new SortableParameter<T, TProperty>(expression);
         _sortableParameters.Add(parameter);
