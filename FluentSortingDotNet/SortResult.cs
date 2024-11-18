@@ -26,9 +26,9 @@ public sealed class SortResult<T>
     public IOrderedQueryable<T>? GetQueryOrDefault()
         => _query;
 
-    public static SortResult<T> Invalid(List<SortParameter> invalidSortParameters, List<string> missingSortParameterNames)
+    internal static SortResult<T> Invalid(List<SortParameter> invalidSortParameters, List<string> missingSortParameterNames)
         => new(null, invalidSortParameters, missingSortParameterNames);
 
-    public static SortResult<T> Valid(IOrderedQueryable<T> query)
+    internal static SortResult<T> Valid(IOrderedQueryable<T> query)
         => new(query, EmptyInvalidSortParameters, EmptyMissingSortParameterNames);
 }

@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 
-namespace FluentSortingDotNet;
+namespace FluentSortingDotNet.Internal;
 
-public interface ISortableParameter<T>
+internal interface ISortableParameter<T>
 {
     LambdaExpression Expression { get; }
     string Name { get; }

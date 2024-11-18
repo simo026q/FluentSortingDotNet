@@ -22,6 +22,7 @@ public abstract class Sorter<T>
         => Sort(query, EmptySortParameters);
 
     public virtual SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
+    public SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
     {
         List<SortParameter> invalidSortParameters = new();
         List<string> missingSortParameterNames = new();
@@ -72,7 +73,7 @@ public abstract class Sorter<T>
         return SortResult<T>.Valid((IOrderedQueryable<T>)query);
     }
 
-    protected virtual IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
+    private IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
     {
         if (!first && query is IOrderedQueryable<T> orderedQuery)
         {
