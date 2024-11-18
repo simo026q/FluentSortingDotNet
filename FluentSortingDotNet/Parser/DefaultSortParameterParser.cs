@@ -7,13 +7,17 @@ public class DefaultSortParameterParser : ISortParameterParser
 {
     public IEnumerable<SortParameter> Parse(ReadOnlySpan<char> query)
     {
+        List<SortParameter> sortParameters = new();
+
         while (TryGetNextPart(ref query, out ReadOnlySpan<char> part))
         {
             if (TryParsePart(part, out SortParameter sortParameter))
             {
-                yield return sortParameter;
+                sortParameters.Add(sortParameter);
             }
         }
+
+        return sortParameters;
     }
 
     protected virtual bool TryGetNextPart(ref ReadOnlySpan<char> query, out ReadOnlySpan<char> part)
