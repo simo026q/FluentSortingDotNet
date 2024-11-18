@@ -6,12 +6,21 @@ using FluentSortingDotNet.Internal;
 
 namespace FluentSortingDotNet;
 
+/// <summary>
+/// Represents a sorter that can sort a collection of items.
+/// </summary>
+/// <typeparam name="T">The type of items to sort.</typeparam>
 public abstract class Sorter<T>
 {
     private static readonly List<SortParameter> EmptySortParameters = new(0);
     private readonly List<ISortableParameter<T>> _sortableParameters = new();
 
-    protected SortParameterBuilder<T, TProperty> SortFor<TProperty>(Expression<Func<T, TProperty>> expression)
+    /// <summary>
+    /// Creates a new <see cref="SortParameterBuilder{T, TProperty}"/> for the specified property.
+    /// </summary>
+    /// <typeparam name="TProperty">The type of the property to sort.</typeparam>
+    /// <param name="expression">The lambda expression that represents the property to sort.</param>
+    /// <returns>A new <see cref="SortParameterBuilder{T, TProperty}"/> instance.</returns>
     protected SortParameterBuilder<T, TProperty> ForParameter<TProperty>(Expression<Func<T, TProperty>> expression)
     {
         var parameter = new SortableParameter<T, TProperty>(expression);
@@ -19,10 +28,20 @@ public abstract class Sorter<T>
         return new SortParameterBuilder<T, TProperty>(parameter);
     }
 
+    /// <summary>
+    /// Sorts the specified query using the default sort parameters.
+    /// </summary>
+    /// <param name="query">The query to sort.</param>
+    /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
     public SortResult<T> SortDefault(IQueryable<T> query)
         => Sort(query, EmptySortParameters);
 
-    public virtual SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
+    /// <summary>
+    /// Sorts the specified query using the specified sort parameters.
+    /// </summary>
+    /// <param name="query">The query to sort.</param>
+    /// <param name="sortParameters">The sort parameters to use.</param>
+    /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
     public SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
     {
         List<SortParameter> invalidSortParameters = new();
