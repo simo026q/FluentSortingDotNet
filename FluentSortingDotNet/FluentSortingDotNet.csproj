@@ -4,7 +4,20 @@
     <TargetFrameworks>netstandard2.0;net9.0;net481</TargetFrameworks>
 	<LangVersion>13</LangVersion>
 	<Nullable>enable</Nullable>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<Title>FluentSorting.NET</Title>
+	<Authors>Scantalk ApS, simo026q</Authors>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<Version>1.0.0-alpha.1</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.6.0" />
