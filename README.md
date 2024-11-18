@@ -10,12 +10,12 @@ public record Person(string Name, int Age);
 using FluentSortingDotNet;
 using FluentSortingDotNet.Parser;
 
-public sealed class PersonSorter : ParsingSorter<Person>
+public sealed class PersonSorter(ISortParameterParser parser) : ParsingSorter<Person>(parser)
 {
-    public PersonSorter(ISortParameterParser parser) : base(parser)
+    protected override void Configure(SortBuilder<Person> builder)
     {
-        ForParameter(p => p.Name).Name("name").Default(SortDirection.Descending);
-        ForParameter(p => p.Age).Name("age");
+        builder.ForParameter(x => x.Name).Name("name").Default(SortDirection.Descending);
+        builder.ForParameter(x => x.Age).Name("age");
     }
 }
 ```
@@ -29,7 +29,17 @@ var sorter = new PersonSorter(parser);
 
 IQueryable<Person> people = ...;
 
-var orderedPeople = sorter.Sort(people, "name,-age");
+SortResult<Person> result = sorter.Sort(people, "name,-age");
+
+if (result.IsValid)
+{
+    var orderedPeople = result.Query.ToList();
+}
+else 
+{
+    // Handle error
+    // result.InvalidSortParameters
+}
 ```
 
 ### Dependency Injection
