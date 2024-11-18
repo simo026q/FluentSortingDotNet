@@ -10,9 +10,16 @@
 	<Authors>Scantalk ApS, simo026q</Authors>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<Version>1.0.0-alpha.1</Version>
+	<NeutralLanguage>en</NeutralLanguage>
+	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	<Copyright>2024 simo026q</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
