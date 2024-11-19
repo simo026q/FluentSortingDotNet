@@ -14,6 +14,11 @@ public class SorterBenchmarks
         new SortParameter("age", SortDirection.Ascending)
     ];
 
+    private static readonly IEnumerable<SortParameter> InvalidSortParameters = [
+        new SortParameter("name", SortDirection.Descending),
+        new SortParameter("invalid", SortDirection.Ascending)
+    ];
+
     private static readonly PersonSorter Sorter = new();
 
     [Benchmark]
@@ -26,6 +31,12 @@ public class SorterBenchmarks
     public SortResult<Person> Sort_FullSortParameters()
     {
         return Sorter.Sort(People, FullSortParameters);
+    }
+
+    [Benchmark]
+    public SortResult<Person> Sort_InvalidSortParameters()
+    {
+        return Sorter.Sort(People, InvalidSortParameters);
     }
 
     private sealed class PersonSorter : Sorter<Person>

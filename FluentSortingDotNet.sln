@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5CF6B4C7
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D5F916DA-2A0B-4B72-854A-D19FDFF0C2EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.Benchmarks", "FluentSortingDotNet.Benchmarks\FluentSortingDotNet.Benchmarks.csproj", "{6E024A6D-ED64-49C7-9F1C-54800B9292C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.Benchmarks", "tests\FluentSortingDotNet.Benchmarks\FluentSortingDotNet.Benchmarks.csproj", "{6E024A6D-ED64-49C7-9F1C-54800B9292C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

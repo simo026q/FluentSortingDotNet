@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseLocalVersion)'!='false'">
-    <ProjectReference Include="..\src\FluentSortingDotNet\FluentSortingDotNet.csproj" />
+    <ProjectReference Include="..\..\src\FluentSortingDotNet\FluentSortingDotNet.csproj" />
   </ItemGroup>
 
 </Project>
