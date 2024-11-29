@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Linq;
 using FluentSortingDotNet.Internal;
+using FluentSortingDotNet.Parser;
 
 namespace FluentSortingDotNet;
 
@@ -12,32 +13,36 @@ namespace FluentSortingDotNet;
 /// <typeparam name="T">The type of items to sort.</typeparam>
 public abstract class Sorter<T>
 {
+    private readonly ISortParameterParser _parser;
     private readonly Dictionary<string, ISortableParameter<T>> _parameters;
-    private readonly HashSet<ISortableParameter<T>> _defaultParameters = [];
+    private readonly List<ISortableParameter<T>> _defaultParameters;
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
-    protected Sorter()
+    protected Sorter(ISortParameterParser parser)
     {
+        _parser = parser;
+
         var builder = new SortBuilder<T>();
         Configure(builder);
 
         List<ISortableParameter<T>> parameters = builder.Build();
 
         _parameters = new(parameters.Count);
+        _defaultParameters = new();
 
         foreach (ISortableParameter<T> parameter in parameters)
         {
 #if NET8_0_OR_GREATER
             if (!_parameters.TryAdd(parameter.Name, parameter))
             {
-                throw new InvalidOperationException($"The parameter name '{parameter.Name}' is already in use.");
+                throw new InvalidOperationException($"A parameter with the name '{parameter.Name}' already exists.");
             }
 #else
             if (_parameters.ContainsKey(parameter.Name))
             {
-                throw new InvalidOperationException($"The parameter name '{parameter.Name}' is already in use.");
+                throw new InvalidOperationException($"A parameter with the name '{parameter.Name}' already exists.");
             }
 
             _parameters[parameter.Name] = parameter;
@@ -48,6 +53,8 @@ public abstract class Sorter<T>
                 _defaultParameters.Add(parameter);
             }
         }
+
+        _defaultParameters.TrimExcess();
     }
 
     /// <summary>
@@ -57,64 +64,91 @@ public abstract class Sorter<T>
     protected abstract void Configure(SortBuilder<T> builder);
 
     /// <summary>
-    /// Sorts the specified query using the default sort parameters.
+    /// Sorts the <paramref name="query"/> with the default parameters.
     /// </summary>
     /// <param name="query">The query to sort.</param>
-    /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
-    public SortResult<T> SortDefault(IQueryable<T> query)
-        => Sort(query, []);
-
-    private SortResult<T> GetAllInvalidParameters(SortParameter sourceParameter, IEnumerator<SortParameter> enumerator)
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    public SortResult Sort(ref IQueryable<T> query)
     {
-        List<SortParameter> invalidSortParameters = [sourceParameter];
+        var first = true;
 
-        while (enumerator.MoveNext())
+        foreach (ISortableParameter<T> parameter in _defaultParameters)
         {
-            SortParameter sortParameter = enumerator.Current;
-            if (!_parameters.ContainsKey(sortParameter.Name))
-            {
-                invalidSortParameters.Add(sortParameter);
-            }
+            query = SortParameter(query, first, parameter.Expression, parameter.DefaultDirection!.Value);
+            first = false;
         }
 
-        return SortResult<T>.Invalid(invalidSortParameters);
+        return SortResult.Success();
     }
 
     /// <summary>
-    /// Sorts the specified query using the specified sort parameters.
+    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuery"/>.
     /// </summary>
     /// <param name="query">The query to sort.</param>
-    /// <param name="sortParameters">The sort parameters to use.</param>
-    /// <returns>A <see cref="SortResult{T}"/> that represents the result of the sort operation.</returns>
-    public SortResult<T> Sort(IQueryable<T> query, IEnumerable<SortParameter> sortParameters)
+    /// <param name="sortQuery">The sort query to use to sort the query.</param>
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    public SortResult Sort(ref IQueryable<T> query, string sortQuery)
     {
-        var first = true;
-        IEnumerator<SortParameter> enumerator = sortParameters.GetEnumerator();
+        return Sort(ref query, sortQuery.AsSpan());
+    }
 
-        while (enumerator.MoveNext())
+    /// <summary>
+    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuerySpan"/>.
+    /// </summary>
+    /// <param name="query">The query to sort.</param>
+    /// <param name="sortQuerySpan">The sort query to use to sort the query.</param>
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    public SortResult Sort(ref IQueryable<T> query, ReadOnlySpan<char> sortQuerySpan)
+    {
+        if (sortQuerySpan.IsEmpty)
         {
-            SortParameter sortParameter = enumerator.Current;
-            if (_parameters.TryGetValue(sortParameter.Name, out ISortableParameter<T>? sortableParameter))
+            return Sort(ref query);
+        }
+
+        var first = true;
+
+        while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
+        {
+            if (_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
-                query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
-                first = false;
+                if (_parameters.TryGetValue(sortParameter.Name, out ISortableParameter<T>? sortableParameter))
+                {
+                    query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
+                    first = false;
+                }
+                else
+                {
+                    return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
+                }
             }
             else
             {
-                return GetAllInvalidParameters(sortParameter, enumerator);
+                return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
             }
         }
 
-        if (first)
+        return first 
+            ? Sort(ref query) 
+            : SortResult.Success();
+    }
+
+    private List<string> GetInvalidParameters(string intialInvalidParameter, ReadOnlySpan<char> sortQuerySpan)
+    {
+        var invalidParameters = new List<string>() { intialInvalidParameter };
+
+        while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
-            foreach (ISortableParameter<T> defaultParameter in _defaultParameters)
+            if (!_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
-                query = SortParameter(query, first, defaultParameter.Expression, defaultParameter.DefaultDirection!.Value);
-                first = false;
+                invalidParameters.Add(parameter.ToString());
+            }
+            else if (!_parameters.ContainsKey(sortParameter.Name))
+            {
+                invalidParameters.Add(sortParameter.Name);
             }
         }
 
-        return SortResult<T>.Valid((IOrderedQueryable<T>)query);
+        return invalidParameters;
     }
 
     private static IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)

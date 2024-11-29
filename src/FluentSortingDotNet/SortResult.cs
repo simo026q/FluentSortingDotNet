@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace FluentSortingDotNet;
@@ -7,45 +6,45 @@ namespace FluentSortingDotNet;
 /// <summary>
 /// Represents the result of a sort operation.
 /// </summary>
-/// <typeparam name="T">The type of the elements in the query.</typeparam>
-public sealed class SortResult<T>
+public readonly struct SortResult
 {
-    private static readonly List<SortParameter> EmptyInvalidSortParameters = new(0);
-
-    private readonly IOrderedQueryable<T>? _query;
-
-    /// <summary>
-    /// Gets the query that was sorted.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">The query is invalid.</exception>
-    public IOrderedQueryable<T> Query => _query ?? throw new InvalidOperationException("The query is invalid.");
+    private static readonly IEnumerable<string> EmptySortParameters = Enumerable.Empty<string>();
+    private static readonly SortResult SuccessResult = new(true, EmptySortParameters);
 
     /// <summary>
-    /// Invalid sort parameters that were used to sort the query.
+    /// Gets a value indicating whether the sort operation was successful.
     /// </summary>
-    public List<SortParameter> InvalidSortParameters { get; }
+    public bool IsSuccess { get; }
 
     /// <summary>
-    /// Indicates whether the query is valid.
+    /// Gets a value indicating whether the sort operation failed.
     /// </summary>
-    public bool IsValid => _query != null;
+    public bool IsFailure => !IsSuccess;
 
-    private SortResult(IOrderedQueryable<T>? query, List<SortParameter>? invalidSortParameters)
+    /// <summary>
+    /// Gets a collection of invalid sort parameters.
+    /// </summary>
+    /// <remarks><see langword="null"/> when SortResult is <see langword="default"/></remarks>
+    public IEnumerable<string> InvalidSortParameters { get; }
+
+    private SortResult(bool isSuccess, IEnumerable<string> invalidSortParameters)
     {
-        _query = query;
-        InvalidSortParameters = invalidSortParameters ?? EmptyInvalidSortParameters;
+        IsSuccess = isSuccess;
+        InvalidSortParameters = invalidSortParameters;
     }
 
     /// <summary>
-    /// Gets the query that was sorted or <see langword="null"/> if the query is invalid.
+    /// Gets a successful <see cref="SortResult"/>.
     /// </summary>
-    /// <returns>The query that was sorted or <see langword="null"/> if the query is invalid.</returns>
-    public IOrderedQueryable<T>? GetQueryOrDefault()
-        => _query;
+    /// <returns>Returns a successful <see cref="SortResult"/>.</returns>
+    public static SortResult Success()
+        => SuccessResult;
 
-    internal static SortResult<T> Invalid(List<SortParameter> invalidSortParameters)
-        => new(null, invalidSortParameters);
-
-    internal static SortResult<T> Valid(IOrderedQueryable<T> query)
-        => new(query, null);
+    /// <summary>
+    /// Creates a new <see cref="SortResult"/> that represents a failed sort operation.
+    /// </summary>
+    /// <param name="invalidSortParameters">A collection of invalid sort parameters.</param>
+    /// <returns>Returns a new <see cref="SortResult"/> that represents a failed sort operation.</returns>
+    public static SortResult Failure(IEnumerable<string> invalidSortParameters)
+        => new(false, invalidSortParameters);
 }

@@ -10,23 +10,24 @@ public sealed class DefaultSortParameterParser : SortParameterParser
         => query.IndexOf(',');
 
     /// <inheritdoc />
-    protected override bool TryParsePart(ReadOnlySpan<char> part, out SortParameter sortParameter)
+    public override bool TryParseParameter(ReadOnlySpan<char> parameter, out SortParameter sortParameter)
     {
         SortDirection direction = SortDirection.Ascending;
 
-        if (part.IsEmpty)
+        if (parameter.IsEmpty)
         {
             sortParameter = default;
             return false;
         }
 
-        if (part[0] == '-')
+        if (parameter[0] == '-')
         {
             direction = SortDirection.Descending;
-            part = part.Slice(1);
+            parameter = parameter.Slice(1);
         }
 
-        sortParameter = new SortParameter(part.ToString(), direction);
+        var parameterName = parameter.ToString();
+        sortParameter = new SortParameter(parameterName, direction);
         return true;
     }
 }

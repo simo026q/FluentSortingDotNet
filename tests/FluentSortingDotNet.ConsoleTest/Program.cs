@@ -12,14 +12,15 @@ Console.WriteLine("Type 'exit' to quit.");
 string query;
 while ((query = GetInput("Enter sort query: ")) != "exit")
 {
-    SortResult<Person> result = sorter.Sort(people.AsQueryable(), query.AsSpan());
-    if (result.IsValid)
+    IQueryable<Person> queryable = people.AsQueryable();
+    SortResult result = sorter.Sort(ref queryable, query);
+    if (result.IsSuccess)
     {
-        Console.WriteLine(string.Join(", ", result.Query));
+        Console.WriteLine(string.Join(", ", queryable));
     }
     else
     {
-        Console.WriteLine($"Invalid sort parameters: {string.Join(", ", result.InvalidSortParameters.Select(x => $"{(x.Direction == SortDirection.Descending ? "-" : "")}{x.Name}"))}");
+        Console.WriteLine($"Invalid sort parameters: {string.Join(", ", result.InvalidSortParameters)}");
     }
 }
 
@@ -51,7 +52,7 @@ public sealed class Person
     }
 }
 
-public sealed class PersonSorter(ISortParameterParser parser) : ParsingSorter<Person>(parser)
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
