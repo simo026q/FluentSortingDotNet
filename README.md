@@ -1,5 +1,15 @@
 # FluentSortingDotNet
 
+## Features
+
+- Parse sort parameters from a string in the format `name,-age`
+    - A custom parser can be added by extending the `SortParameterParser` class or implementing the `ISortParameterParser` interface.
+- Sort an `IQueryable<T>` based on the parsed parameters
+
+## Extensibility
+
+The codebase is intentionally not very extensible. This is because the library is in a early stage and I want to see how it is used before adding more features. If you have any suggestions, please open an issue.
+
 ## Example
 
 ```csharp
@@ -10,12 +20,12 @@ public record Person(string Name, int Age);
 using FluentSortingDotNet;
 using FluentSortingDotNet.Parser;
 
-public sealed class PersonSorter(ISortParameterParser parser) : ParsingSorter<Person>(parser)
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
-        builder.ForParameter(x => x.Name).Name("name").Default(SortDirection.Descending);
-        builder.ForParameter(x => x.Age).Name("age");
+        builder.ForParameter(p => p.Name).Name("name").Default(SortDirection.Descending);
+        builder.ForParameter(p => p.Age).Name("age");
     }
 }
 ```
@@ -29,16 +39,15 @@ var sorter = new PersonSorter(parser);
 
 IQueryable<Person> people = ...;
 
-SortResult<Person> result = sorter.Sort(people, "name,-age");
+SortResult result = sorter.Sort(ref people, "name,-age");
 
-if (result.IsValid)
+if (result.IsSuccess)
 {
     var orderedPeople = result.Query.ToList();
 }
 else 
 {
-    // Handle error
-    // result.InvalidSortParameters
+    Console.WriteLine($"Invalid sort parameters: {string.Join(", ", result.InvalidSortParameters)}");
 }
 ```
 
