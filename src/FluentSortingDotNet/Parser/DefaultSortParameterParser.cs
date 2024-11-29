@@ -16,7 +16,7 @@ public sealed class DefaultSortParameterParser : SortParameterParser
 
         if (parameter.IsEmpty)
         {
-            sortParameter = default;
+            sortParameter = SortParameter.Empty;
             return false;
         }
 

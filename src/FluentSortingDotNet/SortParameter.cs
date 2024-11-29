@@ -8,6 +8,11 @@
 public readonly struct SortParameter(string name, SortDirection direction)
 {
     /// <summary>
+    /// Represents an empty <see cref="SortParameter"/>.
+    /// </summary>
+    public static readonly SortParameter Empty = new(string.Empty, SortDirection.Ascending);
+
+    /// <summary>
     /// Gets the name of the parameter to sort by.
     /// </summary>
     public string Name { get; } = name;
