@@ -15,21 +15,21 @@ public class SorterBenchmarks
     private static readonly PersonSorter Sorter = new();
 
     [Benchmark]
-    public SortResult Sort_NoSortParameters()
+    public SortResult Sort_EmptyQuery()
     {
         IQueryable<Person> queryCopy = People;
         return Sorter.Sort(ref queryCopy, EmptyQuery);
     }
 
     [Benchmark]
-    public SortResult Sort_FullSortParameters()
+    public SortResult Sort_FullQuery()
     {
         IQueryable<Person> queryCopy = People;
         return Sorter.Sort(ref queryCopy, FullQuery);
     }
 
     [Benchmark]
-    public SortResult Sort_InvalidSortParameters()
+    public SortResult Sort_InvalidQuery()
     {
         IQueryable<Person> queryCopy = People;
         return Sorter.Sort(ref queryCopy, InvalidQuery);
