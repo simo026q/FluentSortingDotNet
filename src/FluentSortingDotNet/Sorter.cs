@@ -20,6 +20,7 @@ public abstract class Sorter<T>
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
+    /// <param name="parser">The parser to use to parse the sort query.</param>
     protected Sorter(ISortParameterParser parser)
     {
         _parser = parser;
@@ -56,6 +57,11 @@ public abstract class Sorter<T>
 
         _defaultParameters.TrimExcess();
     }
+
+    /// <summary>
+    /// Creates a new instance of the <see cref="Sorter{T}"/> class.
+    /// </summary>
+    protected Sorter() : this(new DefaultSortParameterParser()) { }
 
     /// <summary>
     /// Configures the sorter with the sort parameters.
