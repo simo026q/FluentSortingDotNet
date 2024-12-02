@@ -1,21 +1,10 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace FluentSortingDotNet.Internal;
 
-internal sealed class SortableParameter<T, TProperty>(Expression<Func<T, TProperty>> expression) : ISortableParameter<T>
+internal sealed class SortableParameter(LambdaExpression expression, string name)
 {
     public LambdaExpression Expression { get; } = expression;
-    public string Name { get; set; } = GetNameFromExpression(expression);
+    public string Name { get; set; } = name;
     public SortDirection? DefaultDirection { get; set; }
-
-    private static string GetNameFromExpression(Expression<Func<T, TProperty>> expression)
-    {
-        var bodyString = expression.Body.ToString();
-        var prefix = expression.Parameters[0].Name + ".";
-
-        return bodyString.StartsWith(prefix) 
-            ? bodyString.Substring(prefix.Length) 
-            : bodyString;
-    }
 }
