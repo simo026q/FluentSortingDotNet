@@ -5,13 +5,11 @@ namespace FluentSortingDotNet;
 /// <summary>
 /// Used to build a sortable parameter.
 /// </summary>
-/// <typeparam name="T"></typeparam>
-/// <typeparam name="TProperty"></typeparam>
-public sealed class SortParameterBuilder<T, TProperty>
+public sealed class SortParameterBuilder
 {
-    private readonly SortableParameter<T, TProperty> _parameter;
+    private readonly SortableParameter _parameter;
 
-    internal SortParameterBuilder(SortableParameter<T, TProperty> parameter)
+    internal SortParameterBuilder(SortableParameter parameter)
     {
         _parameter = parameter;
     }
@@ -21,7 +19,7 @@ public sealed class SortParameterBuilder<T, TProperty>
     /// </summary>
     /// <param name="sortDirection">The sort direction of the default parameter.</param>
     /// <returns>The current builder instance.</returns>
-    public SortParameterBuilder<T, TProperty> Default(SortDirection sortDirection)
+    public SortParameterBuilder Default(SortDirection sortDirection)
     {
         _parameter.DefaultDirection = sortDirection;
         return this;
@@ -32,7 +30,7 @@ public sealed class SortParameterBuilder<T, TProperty>
     /// </summary>
     /// <param name="name">The name of the parameter.</param>
     /// <returns>The current builder instance.</returns>
-    public SortParameterBuilder<T, TProperty> Name(string name)
+    public SortParameterBuilder Name(string name)
     {
         _parameter.Name = name;
         return this;

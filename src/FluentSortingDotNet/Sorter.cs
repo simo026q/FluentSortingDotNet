@@ -14,8 +14,8 @@ namespace FluentSortingDotNet;
 public abstract class Sorter<T>
 {
     private readonly ISortParameterParser _parser;
-    private readonly Dictionary<string, ISortableParameter<T>> _parameters;
-    private readonly List<ISortableParameter<T>> _defaultParameters;
+    private readonly Dictionary<string, SortableParameter> _parameters;
+    private readonly List<SortableParameter> _defaultParameters;
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
@@ -27,12 +27,12 @@ public abstract class Sorter<T>
         var builder = new SortBuilder<T>();
         Configure(builder);
 
-        List<ISortableParameter<T>> parameters = builder.Build();
+        List<SortableParameter> parameters = builder.Build();
 
         _parameters = new(parameters.Count);
         _defaultParameters = new();
 
-        foreach (ISortableParameter<T> parameter in parameters)
+        foreach (SortableParameter parameter in parameters)
         {
 #if NET8_0_OR_GREATER
             if (!_parameters.TryAdd(parameter.Name, parameter))
@@ -72,7 +72,7 @@ public abstract class Sorter<T>
     {
         var first = true;
 
-        foreach (ISortableParameter<T> parameter in _defaultParameters)
+        foreach (SortableParameter parameter in _defaultParameters)
         {
             query = SortParameter(query, first, parameter.Expression, parameter.DefaultDirection!.Value);
             first = false;
@@ -111,7 +111,7 @@ public abstract class Sorter<T>
         {
             if (_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
-                if (_parameters.TryGetValue(sortParameter.Name, out ISortableParameter<T>? sortableParameter))
+                if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
                 {
                     query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
                     first = false;

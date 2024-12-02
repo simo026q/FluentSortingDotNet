@@ -10,7 +10,7 @@ namespace FluentSortingDotNet;
 public readonly struct SortResult
 {
     private static readonly IEnumerable<string> EmptySortParameters = Enumerable.Empty<string>();
-    private static readonly SortResult SuccessResult = new(true, null);
+    private static readonly SortResult SuccessResult = new(true, EmptySortParameters);
 
     /// <remarks>Only <see langword="null"/> when <see cref="SortResult"/> is <see langword="default"/></remarks>
     private readonly IEnumerable<string>? _invalidSortParameters;
@@ -30,10 +30,10 @@ public readonly struct SortResult
     /// </summary>
     public IEnumerable<string> InvalidSortParameters => _invalidSortParameters ?? EmptySortParameters;
 
-    private SortResult(bool isSuccess, IEnumerable<string>? invalidSortParameters)
+    private SortResult(bool isSuccess, IEnumerable<string> invalidSortParameters)
     {
         IsSuccess = isSuccess;
-        _invalidSortParameters = invalidSortParameters ?? EmptySortParameters;
+        _invalidSortParameters = invalidSortParameters;
     }
 
     /// <summary>
