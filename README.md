@@ -5,6 +5,7 @@
 - Parse sort parameters from a string in the format `name,-age`
     - A custom parser can be added by extending the `SortParameterParser` class or implementing the `ISortParameterParser` interface.
 - Sort an `IQueryable<T>` based on the parsed parameters
+- Handle invalid sort parameters
 
 ## Extensibility
 
@@ -12,9 +13,13 @@ The codebase is intentionally not very extensible. This is because the library i
 
 ## Example
 
+### Entity
+
 ```csharp
 public record Person(string Name, int Age);
 ```
+
+### Sorter
 
 ```csharp
 using FluentSortingDotNet;
@@ -24,11 +29,15 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
+        // when no parameters are provided, sort by name descending
         builder.ForParameter(p => p.Name).Name("name").Default(SortDirection.Descending);
+
         builder.ForParameter(p => p.Age).Name("age");
     }
 }
 ```
+
+### Usage
 
 ```csharp
 using FluentSortingDotNet;
@@ -57,3 +66,13 @@ else
 services.AddSingleton<ISortParameterParser, DefaultSortParameterParser>();
 services.AddSingleton<PersonSorter>();
 ```
+
+## Performance
+
+The library is designed to be fast and memory efficient. The area that is yet to be optimized is the reflection used to call all the `OrderBy` methods.
+
+### Benchmarks
+
+See the [benchmarks](tests/FluentSortingDotNet.Benchmarks/SorterBenchmarks.cs) for more information. Please open an issue if you believe the benchmarks are not accurate.
+
+![Benchmark results](tests/FluentSortingDotNet.Benchmarks/v1.0.0-beta.2.png "Benchmark results")
