@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Linq;
 using FluentSortingDotNet.Internal;
 using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Queries;
 
 namespace FluentSortingDotNet;
 
@@ -14,16 +14,21 @@ namespace FluentSortingDotNet;
 public abstract class Sorter<T>
 {
     private readonly ISortParameterParser _parser;
+    private readonly ISortQueryBuilder<T> _queryBuilder;
+
     private readonly Dictionary<string, SortableParameter> _parameters;
     private readonly List<SortableParameter> _defaultParameters;
+
+    private ISortQuery<T>? _defaultQuery;
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
     /// <param name="parser">The parser to use to parse the sort query.</param>
-    protected Sorter(ISortParameterParser parser)
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> queryBuilder)
     {
         _parser = parser;
+        _queryBuilder = queryBuilder;
 
         var builder = new SortBuilder<T>();
         Configure(builder);
@@ -59,11 +64,6 @@ public abstract class Sorter<T>
     }
 
     /// <summary>
-    /// Creates a new instance of the <see cref="Sorter{T}"/> class.
-    /// </summary>
-    protected Sorter() : this(new DefaultSortParameterParser()) { }
-
-    /// <summary>
     /// Configures the sorter with the sort parameters.
     /// </summary>
     /// <param name="builder">The builder to use to configure the sorter.</param>
@@ -76,14 +76,29 @@ public abstract class Sorter<T>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
     public SortResult Sort(ref IQueryable<T> query)
     {
-        var first = true;
-
-        foreach (SortableParameter parameter in _defaultParameters)
+        if (_defaultParameters.Count == 0)
         {
-            query = SortParameter(query, first, parameter.Expression, parameter.DefaultDirection!.Value);
-            first = false;
+            return SortResult.Success();
         }
 
+        if (_defaultQuery is null)
+        {
+            _queryBuilder.Reset();
+
+            foreach (SortableParameter parameter in _defaultParameters)
+            {
+                _queryBuilder.SortBy(parameter.Expression, parameter.DefaultDirection!.Value);
+            }
+
+            if (_queryBuilder.IsEmpty)
+            {
+                return SortResult.Failure([]);
+            }
+
+            _defaultQuery = _queryBuilder.Build();
+        }
+
+        query = _defaultQuery.Apply(query);
         return SortResult.Success();
     }
 
@@ -111,7 +126,7 @@ public abstract class Sorter<T>
             return Sort(ref query);
         }
 
-        var first = true;
+        _queryBuilder.Reset();
 
         while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
@@ -119,23 +134,30 @@ public abstract class Sorter<T>
             {
                 if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
                 {
-                    query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
-                    first = false;
+                    _queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
                 }
                 else
                 {
+                    _queryBuilder.Reset();
                     return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
                 }
             }
             else
             {
+                _queryBuilder.Reset();
                 return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
             }
         }
 
-        return first 
-            ? Sort(ref query) 
-            : SortResult.Success();
+        if (_queryBuilder.IsEmpty)
+        {
+            return Sort(ref query);
+        }
+        else
+        {
+            query = _queryBuilder.Build().Apply(query);
+            return SortResult.Success();
+        }
     }
 
     private List<string> GetInvalidParameters(string intialInvalidParameter, ReadOnlySpan<char> sortQuerySpan)
@@ -155,27 +177,5 @@ public abstract class Sorter<T>
         }
 
         return invalidParameters;
-    }
-
-    private static IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
-    {
-        if (!first)
-        {
-            return direction switch
-            {
-                SortDirection.Ascending => ((IOrderedQueryable<T>)query).ThenBy(expression),
-                SortDirection.Descending => ((IOrderedQueryable<T>)query).ThenByDescending(expression),
-                _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-            };
-        }
-        else
-        {
-            return direction switch
-            {
-                SortDirection.Ascending => query.OrderBy(expression),
-                SortDirection.Descending => query.OrderByDescending(expression),
-                _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-            };
-        }
     }
 }

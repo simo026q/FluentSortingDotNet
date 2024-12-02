@@ -1,5 +1,6 @@
 ﻿using FluentSortingDotNet;
 using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Queries;
 
 var random = new Random(2024);
 var people = Enumerable.Range(0, 10).Select(_ => Person.Random(random)).ToArray();
@@ -52,7 +53,7 @@ public sealed class Person
     }
 }
 
-public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser, new ExpressionSortQueryBuilder<Person>())
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
