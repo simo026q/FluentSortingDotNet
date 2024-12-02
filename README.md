@@ -73,6 +73,6 @@ The library is designed to be fast and memory efficient. The area that is yet to
 
 ### Benchmarks
 
-See the [benchmarks](tests/FluentSortingDotNet.Benchmarks/SorterBenchmarks.cs) for more information. Please open an issue if you believe the benchmarks are not accurate.
+See the [benchmarks](tests/FluentSortingDotNet.Benchmarks/SorterBenchmarks.cs) for more information. Take the benchmark results with a grain of salt, as they seem to be too good to be true.
 
 ![Benchmark results](tests/FluentSortingDotNet.Benchmarks/v1.0.0-beta.2.png "Benchmark results")

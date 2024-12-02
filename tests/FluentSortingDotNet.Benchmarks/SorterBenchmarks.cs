@@ -6,36 +6,51 @@ using FluentSortingDotNet.Parser;
 public class SorterBenchmarks
 {
     public static readonly IQueryable<Person> People = Enumerable.Range(0, 10).Select(i => new Person($"Name{i + 1}", i * 2 + 18)).ToArray().AsQueryable();
+    public static readonly PersonSorter Sorter = new();
+
+    public const string EmptyQuery = "";
+    public const string FullQuery = "name,-age";
+    public const string InvalidQuery = "name,-invalid";
+
+    [Benchmark]
+    public List<Person> Sort_EmptyQuery()
+    {
+        IQueryable<Person> queryCopy = People;
+        Sorter.Sort(ref queryCopy, EmptyQuery);
+        return queryCopy.ToList();
+    }
+
+    [Benchmark]
+    public List<Person> Sort_EmptyQuery_Linq()
+    {
+        return People.OrderByDescending(p => p.Name).ToList();
+    }
+
+    [Benchmark]
+    public List<Person> Sort_FullQuery()
+    {
+        IQueryable<Person> queryCopy = People;
+        Sorter.Sort(ref queryCopy, FullQuery);
+        return queryCopy.ToList();
+    }
+
+    [Benchmark]
+    public List<Person> Sort_FullQuery_Linq()
+    {
+        return People.OrderBy(p => p.Name).ThenByDescending(p => p.Age).ToList();
+    }
+
+    [Benchmark]
+    public List<string> Sort_InvalidQuery()
+    {
+        IQueryable<Person> queryCopy = People;
+        SortResult result = Sorter.Sort(ref queryCopy, InvalidQuery);
+        return result.InvalidSortParameters.ToList();
+    }
+
     public sealed record Person(string Name, int Age);
 
-    private const string EmptyQuery = "";
-    private const string FullQuery = "name,-age";
-    private const string InvalidQuery = "name,-invalid";
-
-    private static readonly PersonSorter Sorter = new();
-
-    [Benchmark]
-    public SortResult Sort_EmptyQuery()
-    {
-        IQueryable<Person> queryCopy = People;
-        return Sorter.Sort(ref queryCopy, EmptyQuery);
-    }
-
-    [Benchmark]
-    public SortResult Sort_FullQuery()
-    {
-        IQueryable<Person> queryCopy = People;
-        return Sorter.Sort(ref queryCopy, FullQuery);
-    }
-
-    [Benchmark]
-    public SortResult Sort_InvalidQuery()
-    {
-        IQueryable<Person> queryCopy = People;
-        return Sorter.Sort(ref queryCopy, InvalidQuery);
-    }
-
-    private sealed class PersonSorter : Sorter<Person>
+    public sealed class PersonSorter : Sorter<Person>
     {
         public PersonSorter() : base(new DefaultSortParameterParser())
         { }
