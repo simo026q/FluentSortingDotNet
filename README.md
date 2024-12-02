@@ -37,13 +37,13 @@ using FluentSortingDotNet.Parser;
 var parser = new DefaultSortParameterParser();
 var sorter = new PersonSorter(parser);
 
-IQueryable<Person> people = ...;
+IQueryable<Person> peopleQuery = ...;
 
-SortResult result = sorter.Sort(ref people, "name,-age");
+SortResult result = sorter.Sort(ref peopleQuery, "name,-age");
 
 if (result.IsSuccess)
 {
-    var orderedPeople = result.Query.ToList();
+    var orderedPeople = peopleQuery.ToList();
 }
 else 
 {
