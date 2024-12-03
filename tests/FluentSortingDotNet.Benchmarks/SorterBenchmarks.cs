@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using FluentSortingDotNet;
-using FluentSortingDotNet.Parser;
 
 [MemoryDiagnoser(false)]
 public class SorterBenchmarks
@@ -52,9 +51,6 @@ public class SorterBenchmarks
 
     public sealed class PersonSorter : Sorter<Person>
     {
-        public PersonSorter() : base(new DefaultSortParameterParser())
-        { }
-
         protected override void Configure(SortBuilder<Person> builder)
         {
             builder.ForParameter(x => x.Name).Name("name").Default(SortDirection.Descending);
