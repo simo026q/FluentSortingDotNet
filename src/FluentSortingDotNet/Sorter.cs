@@ -35,15 +35,15 @@ public abstract class Sorter<T>
 
         foreach (SortableParameter parameter in parameters)
         {
-#if NET8_0_OR_GREATER
+#if NETCOREAPP2_0_OR_GREATER
             if (!_parameters.TryAdd(parameter.Name, parameter))
             {
-                throw new InvalidOperationException($"A parameter with the name '{parameter.Name}' already exists.");
+                throw ParameterAlreadyExists(parameter.Name);
             }
 #else
             if (_parameters.ContainsKey(parameter.Name))
             {
-                throw new InvalidOperationException($"A parameter with the name '{parameter.Name}' already exists.");
+                throw ParameterAlreadyExists(parameter.Name);
             }
 
             _parameters[parameter.Name] = parameter;
@@ -56,6 +56,11 @@ public abstract class Sorter<T>
         }
 
         _defaultParameters.TrimExcess();
+
+        static InvalidOperationException ParameterAlreadyExists(string name)
+        {
+            return new($"A parameter with the name '{name}' already exists.");
+        }
     }
 
     /// <summary>
