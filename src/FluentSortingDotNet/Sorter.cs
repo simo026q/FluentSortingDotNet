@@ -118,6 +118,7 @@ public abstract class Sorter<T>
         }
 
         var first = true;
+        IQueryable<T> queryCopy = query;
 
         while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
@@ -125,7 +126,7 @@ public abstract class Sorter<T>
             {
                 if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
                 {
-                    query = SortParameter(query, first, sortableParameter.Expression, sortParameter.Direction);
+                    queryCopy = SortParameter(queryCopy, first, sortableParameter.Expression, sortParameter.Direction);
                     first = false;
                 }
                 else
@@ -138,6 +139,8 @@ public abstract class Sorter<T>
                 return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
             }
         }
+
+        query = queryCopy;
 
         return first 
             ? Sort(ref query) 
