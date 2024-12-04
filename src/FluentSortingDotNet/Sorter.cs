@@ -8,7 +8,7 @@ using FluentSortingDotNet.Parser;
 namespace FluentSortingDotNet;
 
 /// <summary>
-/// Represents a sorter that can sort a collection of items.
+/// Represents a sorter that can sort a <see cref="IQueryable{T}"/> with a string based sort query. 
 /// </summary>
 /// <typeparam name="T">The type of items to sort.</typeparam>
 public abstract class Sorter<T>
@@ -20,7 +20,7 @@ public abstract class Sorter<T>
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
-    /// <param name="parser">The parser to use to parse the sort query.</param>
+    /// <param name="parser">The parser to use to parse the string based sort query.</param>
     protected Sorter(ISortParameterParser parser)
     {
         _parser = parser;
@@ -59,12 +59,13 @@ public abstract class Sorter<T>
 
         static InvalidOperationException ParameterAlreadyExists(string name)
         {
+            // This method will likely be inlined by the compiler
             return new($"A parameter with the name '{name}' already exists.");
         }
     }
 
     /// <summary>
-    /// Creates a new instance of the <see cref="Sorter{T}"/> class.
+    /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort parameter parser.
     /// </summary>
     protected Sorter() : this(new DefaultSortParameterParser()) { }
 
@@ -75,10 +76,10 @@ public abstract class Sorter<T>
     protected abstract void Configure(SortBuilder<T> builder);
 
     /// <summary>
-    /// Sorts the <paramref name="query"/> with the default parameters.
+    /// Sorts the <paramref name="query"/> with the default sort parameters.
     /// </summary>
-    /// <param name="query">The query to sort.</param>
-    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
     public SortResult Sort(ref IQueryable<T> query)
     {
         var first = true;
@@ -93,11 +94,11 @@ public abstract class Sorter<T>
     }
 
     /// <summary>
-    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuery"/>.
+    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuery"/>. If <paramref name="sortQuery"/> is <see langword="null"/> or empty, the default sort parameters are used.
     /// </summary>
-    /// <param name="query">The query to sort.</param>
-    /// <param name="sortQuery">The sort query to use to sort the query.</param>
-    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
+    /// <param name="sortQuery">The string based sort query to use to sort the query or <see langword="null"/> to use the default sort parameters.</param>
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
     public SortResult Sort(ref IQueryable<T> query, string? sortQuery)
     {
         // when sortQuery is null, AsSpan() will return default(ReadOnlySpan<char>)
@@ -105,11 +106,11 @@ public abstract class Sorter<T>
     }
 
     /// <summary>
-    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuerySpan"/>.
+    /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuerySpan"/>. If <paramref name="sortQuerySpan"/> is empty, the default sort parameters are used.
     /// </summary>
-    /// <param name="query">The query to sort.</param>
-    /// <param name="sortQuerySpan">The sort query to use to sort the query.</param>
-    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
+    /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
+    /// <param name="sortQuerySpan">The string based sort query to use to sort the query.</param>
+    /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
     public SortResult Sort(ref IQueryable<T> query, ReadOnlySpan<char> sortQuerySpan)
     {
         if (sortQuerySpan.IsEmpty)
@@ -166,6 +167,7 @@ public abstract class Sorter<T>
         return invalidParameters;
     }
 
+    // Consider adding abstraction for the concrete sorting implementation.
     private static IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
     {
         if (!first)
