@@ -98,8 +98,9 @@ public abstract class Sorter<T>
     /// <param name="query">The query to sort.</param>
     /// <param name="sortQuery">The sort query to use to sort the query.</param>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation.</returns>
-    public SortResult Sort(ref IQueryable<T> query, string sortQuery)
+    public SortResult Sort(ref IQueryable<T> query, string? sortQuery)
     {
+        // when sortQuery is null, AsSpan() will return default(ReadOnlySpan<char>)
         return Sort(ref query, sortQuery.AsSpan());
     }
 
