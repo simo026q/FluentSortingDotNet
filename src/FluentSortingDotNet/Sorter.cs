@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Linq;
 using FluentSortingDotNet.Internal;
 using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Queries;
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -18,16 +18,21 @@ namespace FluentSortingDotNet;
 public abstract class Sorter<T>
 {
     private readonly ISortParameterParser _parser;
+    private readonly ISortQueryBuilder<T> _queryBuilder;
+    private readonly ISortQuery<T> _defaultQuery;
+
     private readonly IDictionary<string, SortableParameter> _parameters;
-    private readonly List<SortableParameter> _defaultParameters;
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
-    protected Sorter(ISortParameterParser parser)
+    /// <param name="sortQueryBuilder">The query builder used for applying the sort parameters.</param>
+    /// <param name="defaultParameterSortQueryBuilder">The query builder used for applying the default sort parameters.</param>
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder, ISortQueryBuilder<T> defaultParameterSortQueryBuilder)
     {
         _parser = parser;
+        _queryBuilder = sortQueryBuilder;
 
         var builder = new SortBuilder<T>();
         Configure(builder);
@@ -35,7 +40,6 @@ public abstract class Sorter<T>
         List<SortableParameter> parameters = builder.Build();
 
         var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count);
-        _defaultParameters = new();
 
         foreach (SortableParameter parameter in parameters)
         {
@@ -55,7 +59,7 @@ public abstract class Sorter<T>
 
             if (parameter.DefaultDirection.HasValue)
             {
-                _defaultParameters.Add(parameter);
+                defaultParameterSortQueryBuilder.SortBy(parameter.Expression, parameter.DefaultDirection.Value);
             }
         }
 
@@ -65,7 +69,9 @@ public abstract class Sorter<T>
         _parameters = parametersDictionary;
 #endif
 
-        _defaultParameters.TrimExcess();
+        _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty 
+            ? NullSortQuery<T>.Instance 
+            : defaultParameterSortQueryBuilder.BuildAndReset();
 
         static InvalidOperationException ParameterAlreadyExists(string name)
         {
@@ -73,6 +79,19 @@ public abstract class Sorter<T>
             return new($"A parameter with the name '{name}' already exists.");
         }
     }
+
+    /// <summary>
+    /// Creates a new instance of the <see cref="Sorter{T}"/> class.
+    /// </summary>
+    /// <param name="parser">The parser to use to parse the string based sort query.</param>
+    /// <param name="sortQueryBuilder">The query builder used for applying the sort parameters.</param>
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder) : this(parser, sortQueryBuilder, sortQueryBuilder) { }
+
+    /// <summary>
+    /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort query builder.
+    /// </summary>
+    /// <param name="parser">The parser to use to parse the string based sort query.</param>
+    protected Sorter(ISortParameterParser parser) : this(parser, DefaultSortQueryBuilder<T>.Instance) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort parameter parser.
@@ -92,14 +111,7 @@ public abstract class Sorter<T>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
     public SortResult Sort(ref IQueryable<T> query)
     {
-        var first = true;
-
-        foreach (SortableParameter parameter in _defaultParameters)
-        {
-            query = SortParameter(query, first, parameter.Expression, parameter.DefaultDirection!.Value);
-            first = false;
-        }
-
+        query = _defaultQuery.Apply(query);
         return SortResult.Success();
     }
 
@@ -128,17 +140,13 @@ public abstract class Sorter<T>
             return Sort(ref query);
         }
 
-        var first = true;
-        IQueryable<T> queryCopy = query;
-
         while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
             if (_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
                 if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
                 {
-                    queryCopy = SortParameter(queryCopy, first, sortableParameter.Expression, sortParameter.Direction);
-                    first = false;
+                    _queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
                 }
                 else
                 {
@@ -151,11 +159,13 @@ public abstract class Sorter<T>
             }
         }
 
-        query = queryCopy;
+        if (_queryBuilder.IsEmpty)
+        {
+            return Sort(ref query);
+        }
 
-        return first 
-            ? Sort(ref query) 
-            : SortResult.Success();
+        query = _queryBuilder.Apply(query);
+        return SortResult.Success();
     }
 
     private List<string> GetInvalidParameters(string intialInvalidParameter, ReadOnlySpan<char> sortQuerySpan)
@@ -175,28 +185,5 @@ public abstract class Sorter<T>
         }
 
         return invalidParameters;
-    }
-
-    // Consider adding abstraction for the concrete sorting implementation.
-    private static IOrderedQueryable<T> SortParameter(IQueryable<T> query, bool first, LambdaExpression expression, SortDirection direction)
-    {
-        if (!first)
-        {
-            return direction switch
-            {
-                SortDirection.Ascending => ((IOrderedQueryable<T>)query).ThenBy(expression),
-                SortDirection.Descending => ((IOrderedQueryable<T>)query).ThenByDescending(expression),
-                _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-            };
-        }
-        else
-        {
-            return direction switch
-            {
-                SortDirection.Ascending => query.OrderBy(expression),
-                SortDirection.Descending => query.OrderByDescending(expression),
-                _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-            };
-        }
     }
 }
