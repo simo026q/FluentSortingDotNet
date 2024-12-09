@@ -10,7 +10,7 @@ public class ParserBenchmarks
 
     private readonly DefaultSortParameterParser DefaultParser = DefaultSortParameterParser.Instance;
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public SortParameter ParseFirst()
     {
         ReadOnlySpan<char> query = Query.AsSpan();

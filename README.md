@@ -135,6 +135,17 @@ The library is designed to be fast and memory efficient. The area that is yet to
 
 ### Benchmarks
 
-See the [benchmarks](tests/FluentSortingDotNet.Benchmarks/SorterBenchmarks.cs) for more information. Take the benchmark results with a grain of salt, as they seem to be too good to be true.
+#### Query building
 
-![Benchmark results](tests/FluentSortingDotNet.Benchmarks/v1.0.0-beta.2.png "Benchmark results")
+The query building is very fast. 
+It has a slightly worse performance (when using a sort query string) than calling the `OrderBy`, `OrderByDescending`, `ThenBy`, and `ThenByDescending` methods directly. 
+The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
+Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
+
+![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.2.png "Query building benchmark results")
+
+#### Parsing
+
+The parsing has no real-world impact on performance.
+
+![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.2.png "Parsing benchmark results")
