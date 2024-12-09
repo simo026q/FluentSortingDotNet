@@ -20,4 +20,8 @@
     <ProjectReference Include="..\..\src\FluentSortingDotNet\FluentSortingDotNet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FluentSortingDotNet.Testing\FluentSortingDotNet.Testing.csproj" />
+  </ItemGroup>
+
 </Project>

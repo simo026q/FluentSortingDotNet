@@ -1,3 +1,4 @@
 ﻿using BenchmarkDotNet.Running;
 
-BenchmarkRunner.Run<SorterBenchmarks>();
+//BenchmarkRunner.Run<ParserBenchmarks>();
+BenchmarkRunner.Run<QueryBuilderBenchmarks>();
