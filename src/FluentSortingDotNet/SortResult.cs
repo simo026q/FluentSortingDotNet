@@ -21,11 +21,6 @@ public readonly struct SortResult
     public bool IsSuccess { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the sort operation failed.
-    /// </summary>
-    public bool IsFailure => !IsSuccess;
-
-    /// <summary>
     /// Gets a collection of invalid sort parameters.
     /// </summary>
     public IEnumerable<string> InvalidSortParameters => _invalidSortParameters ?? EmptySortParameters;
