@@ -5,6 +5,10 @@ using System.Linq;
 using FluentSortingDotNet.Internal;
 using FluentSortingDotNet.Parser;
 
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
+
 namespace FluentSortingDotNet;
 
 /// <summary>
@@ -14,7 +18,7 @@ namespace FluentSortingDotNet;
 public abstract class Sorter<T>
 {
     private readonly ISortParameterParser _parser;
-    private readonly Dictionary<string, SortableParameter> _parameters;
+    private readonly IDictionary<string, SortableParameter> _parameters;
     private readonly List<SortableParameter> _defaultParameters;
 
     /// <summary>
@@ -30,23 +34,23 @@ public abstract class Sorter<T>
 
         List<SortableParameter> parameters = builder.Build();
 
-        _parameters = new(parameters.Count);
+        var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count);
         _defaultParameters = new();
 
         foreach (SortableParameter parameter in parameters)
         {
 #if NETCOREAPP2_0_OR_GREATER
-            if (!_parameters.TryAdd(parameter.Name, parameter))
+            if (!parametersDictionary.TryAdd(parameter.Name, parameter))
             {
                 throw ParameterAlreadyExists(parameter.Name);
             }
 #else
-            if (_parameters.ContainsKey(parameter.Name))
+            if (parametersDictionary.ContainsKey(parameter.Name))
             {
                 throw ParameterAlreadyExists(parameter.Name);
             }
 
-            _parameters[parameter.Name] = parameter;
+            parametersDictionary[parameter.Name] = parameter;
 #endif
 
             if (parameter.DefaultDirection.HasValue)
@@ -54,6 +58,12 @@ public abstract class Sorter<T>
                 _defaultParameters.Add(parameter);
             }
         }
+
+#if NET8_0_OR_GREATER
+        _parameters = parametersDictionary.ToFrozenDictionary();
+#else
+        _parameters = parametersDictionary;
+#endif
 
         _defaultParameters.TrimExcess();
 
