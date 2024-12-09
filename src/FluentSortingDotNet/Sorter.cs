@@ -85,7 +85,7 @@ public abstract class Sorter<T>
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
     /// <param name="sortQueryBuilder">The query builder used for applying the sort parameters.</param>
-    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder) : this(parser, sortQueryBuilder, sortQueryBuilder) { }
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder) : this(parser, sortQueryBuilder, ExpressionSortQueryBuilder<T>.Instance) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort query builder.
