@@ -8,11 +8,8 @@ internal static class QueryableExtensions
 {
     private static IOrderedQueryable<T> CreateOrderQuery<T>(IQueryable<T> query, LambdaExpression expression, MethodInfo method)
     {
-        return (IOrderedQueryable<T>)query.Provider.CreateQuery<T>(Expression.Call(
-            null,
-            method.MakeGenericMethod(typeof(T), expression.ReturnType),
-            query.Expression,
-            Expression.Quote(expression)));
+        return (IOrderedQueryable<T>)query.Provider.CreateQuery<T>(
+            QueryableHelper.CreateMethodCall(method.MakeGenericMethod(typeof(T), expression.ReturnType), query.Expression, expression));
     }
 
     public static IOrderedQueryable<T> OrderBy<T>(this IQueryable<T> queryable, LambdaExpression expression)
