@@ -20,7 +20,7 @@ public record Person(string Name, int Age);
 ```csharp
 using FluentSortingDotNet;
 
-public sealed class PersonSorter : Sorter<Person>
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser) // The Sorter class also have an empty constructor that uses the DefaultSortParameterParser
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
@@ -37,7 +37,7 @@ public sealed class PersonSorter : Sorter<Person>
 ```csharp
 using FluentSortingDotNet;
 
-var sorter = new PersonSorter();
+var sorter = new PersonSorter(DefaultSortParameterParser.Instance);
 
 IQueryable<Person> peopleQuery = ...;
 
@@ -56,7 +56,7 @@ else
 ### Dependency Injection
 
 ```csharp
-services.AddSingleton<ISortParameterParser, DefaultSortParameterParser>();
+services.AddSingleton<ISortParameterParser>(DefaultSortParameterParser.Instance);
 services.AddSingleton<PersonSorter>();
 ```
 

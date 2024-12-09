@@ -67,7 +67,7 @@ public abstract class Sorter<T>
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort parameter parser.
     /// </summary>
-    protected Sorter() : this(new DefaultSortParameterParser()) { }
+    protected Sorter() : this(DefaultSortParameterParser.Instance) { }
 
     /// <summary>
     /// Configures the sorter with the sort parameters.
