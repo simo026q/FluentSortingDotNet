@@ -35,7 +35,7 @@ public class QueryBuilderBenchmarks
     public List<Person> Linq()
     {
         return People
-            .OrderByDescending(p => p.Name)
+            .OrderBy(p => p.Name)
             .ThenByDescending(p => p.Age)
             .ToList();
     }
