@@ -28,4 +28,18 @@ internal static class QueryableMethods
             return methods[name].First(x => x.GetParameters().Length == parameterCount);
         }
     }
+
+    public static MethodInfo GetOrderByMethod(SortDirection direction)
+    {
+        return direction == SortDirection.Ascending 
+            ? OrderBy 
+            : OrderByDescending;
+    }
+
+    public static MethodInfo GetThenByMethod(SortDirection direction)
+    {
+        return direction == SortDirection.Ascending
+            ? ThenBy
+            : ThenByDescending;
+    }
 }

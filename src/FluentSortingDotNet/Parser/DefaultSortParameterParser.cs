@@ -5,6 +5,15 @@ namespace FluentSortingDotNet.Parser;
 /// <inheritdoc />
 public sealed class DefaultSortParameterParser : SortParameterParser
 {
+    /// <summary>
+    /// Gets the instance of the <see cref="DefaultSortParameterParser"/>.
+    /// </summary>
+    public static DefaultSortParameterParser Instance { get; } = new();
+
+    private DefaultSortParameterParser()
+    {
+    }
+
     /// <inheritdoc />
     protected override int IndexOfSeparator(ReadOnlySpan<char> query) 
         => query.IndexOf(',');

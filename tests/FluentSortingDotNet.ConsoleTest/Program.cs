@@ -1,11 +1,8 @@
 ﻿using FluentSortingDotNet;
-using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Testing;
 
-var random = new Random(2024);
-var people = Enumerable.Range(0, 10).Select(_ => Person.Random(random)).ToArray();
-
-var parser = new DefaultSortParameterParser();
-var sorter = new PersonSorter(parser);
+List<Person> people = Person.Faker.UseSeed(2024).Generate(10);
+var sorter = new PersonSorter();
 
 Console.WriteLine("Type 'exit' to quit.");
 
@@ -28,35 +25,4 @@ static string GetInput(string prompt)
 {
     Console.Write(prompt);
     return Console.ReadLine() ?? string.Empty;
-}
-
-public sealed class Person
-{
-    private static readonly string[] Names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ivy", "Jack"];
-
-    public string Name { get; set; }
-    public int Age { get; set; }
-
-    public static Person Random(Random random)
-    {
-        return new Person
-        {
-            Name = Names[random.Next(Names.Length)],
-            Age = random.Next(18, 100)
-        };
-    }
-
-    public override string ToString()
-    {
-        return $"{Name} ({Age})";
-    }
-}
-
-public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
-{
-    protected override void Configure(SortBuilder<Person> builder)
-    {
-        builder.ForParameter(x => x.Name).Name("name");
-        builder.ForParameter(x => x.Age).Name("age").Default(SortDirection.Descending);
-    }
 }

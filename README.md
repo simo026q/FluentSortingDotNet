@@ -20,7 +20,7 @@ public record Person(string Name, int Age);
 ```csharp
 using FluentSortingDotNet;
 
-public sealed class PersonSorter : Sorter<Person>
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser) // The Sorter class also have an empty constructor that uses the DefaultSortParameterParser
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
@@ -37,7 +37,7 @@ public sealed class PersonSorter : Sorter<Person>
 ```csharp
 using FluentSortingDotNet;
 
-var sorter = new PersonSorter();
+var sorter = new PersonSorter(DefaultSortParameterParser.Instance);
 
 IQueryable<Person> peopleQuery = ...;
 
@@ -56,7 +56,7 @@ else
 ### Dependency Injection
 
 ```csharp
-services.AddSingleton<ISortParameterParser, DefaultSortParameterParser>();
+services.AddSingleton<ISortParameterParser>(DefaultSortParameterParser.Instance);
 services.AddSingleton<PersonSorter>();
 ```
 
@@ -135,6 +135,17 @@ The library is designed to be fast and memory efficient. The area that is yet to
 
 ### Benchmarks
 
-See the [benchmarks](tests/FluentSortingDotNet.Benchmarks/SorterBenchmarks.cs) for more information. Take the benchmark results with a grain of salt, as they seem to be too good to be true.
+#### Query building
 
-![Benchmark results](tests/FluentSortingDotNet.Benchmarks/v1.0.0-beta.2.png "Benchmark results")
+The query building is very fast. 
+It has a slightly worse performance (when using a sort query string) than calling the `OrderBy`, `OrderByDescending`, `ThenBy`, and `ThenByDescending` methods directly. 
+The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
+Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
+
+![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.2.png "Query building benchmark results")
+
+#### Parsing
+
+The parsing has no real-world impact on performance.
+
+![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.2.png "Parsing benchmark results")
