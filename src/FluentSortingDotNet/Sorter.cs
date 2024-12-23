@@ -18,7 +18,7 @@ namespace FluentSortingDotNet;
 public abstract class Sorter<T>
 {
     private readonly ISortParameterParser _parser;
-    private readonly ISortQueryBuilder<T> _queryBuilder;
+    private readonly ISortQueryBuilderFactory<T> _queryBuilderFactory;
     private readonly ISortQuery<T> _defaultQuery;
 
     private readonly IDictionary<string, SortableParameter> _parameters;
@@ -27,12 +27,12 @@ public abstract class Sorter<T>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
-    /// <param name="sortQueryBuilder">The query builder used for applying the sort parameters.</param>
+    /// <param name="sortQueryBuilderFactory">The factory used to create a query builder for applying the sort parameters.</param>
     /// <param name="defaultParameterSortQueryBuilder">The query builder used for applying the default sort parameters.</param>
-    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder, ISortQueryBuilder<T> defaultParameterSortQueryBuilder)
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory, ISortQueryBuilder<T> defaultParameterSortQueryBuilder)
     {
         _parser = parser;
-        _queryBuilder = sortQueryBuilder;
+        _queryBuilderFactory = sortQueryBuilderFactory;
 
         var builder = new SortBuilder<T>();
         Configure(builder);
@@ -71,7 +71,7 @@ public abstract class Sorter<T>
 
         _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty 
             ? NullSortQuery<T>.Instance 
-            : defaultParameterSortQueryBuilder.BuildAndReset();
+            : defaultParameterSortQueryBuilder.Build();
 
         static InvalidOperationException ParameterAlreadyExists(string name)
         {
@@ -84,14 +84,14 @@ public abstract class Sorter<T>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class.
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
-    /// <param name="sortQueryBuilder">The query builder used for applying the sort parameters.</param>
-    protected Sorter(ISortParameterParser parser, ISortQueryBuilder<T> sortQueryBuilder) : this(parser, sortQueryBuilder, ExpressionSortQueryBuilder<T>.Instance) { }
+    /// <param name="sortQueryBuilderFactory">The factory used to create a query builder for applying the sort parameters.</param>
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory) : this(parser, sortQueryBuilderFactory, new ExpressionSortQueryBuilder<T>()) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort query builder.
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
-    protected Sorter(ISortParameterParser parser) : this(parser, DefaultSortQueryBuilder<T>.Instance) { }
+    protected Sorter(ISortParameterParser parser) : this(parser, DefaultSortQueryBuilderFactory<T>.Instance) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort parameter parser.
@@ -140,31 +140,29 @@ public abstract class Sorter<T>
             return Sort(ref query);
         }
 
+        ISortQueryBuilder<T> queryBuilder = _queryBuilderFactory.Create();
+
         while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
             if (_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
                 if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
                 {
-                    _queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
+                    queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
                 }
-                else
-                {
-                    return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
-                }
+
+                return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
             }
-            else
-            {
-                return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
-            }
+
+            return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
         }
 
-        if (_queryBuilder.IsEmpty)
+        if (queryBuilder.IsEmpty)
         {
             return Sort(ref query);
         }
 
-        query = _queryBuilder.Apply(query);
+        query = queryBuilder.Build().Apply(query);
         return SortResult.Success();
     }
 

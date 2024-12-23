@@ -12,15 +12,17 @@ public class QueryBuilderBenchmarks
     public static readonly LambdaExpression NameExpression = (Expression<Func<Person, string>>)(p => p.Name);
     public static readonly LambdaExpression AgeExpression = (Expression<Func<Person, int>>)(p => p.Age);
 
-    public static readonly DefaultSortQueryBuilder<Person> DefaultQueryBuilder = DefaultSortQueryBuilder<Person>.Instance;
-    public static readonly ISortQuery<Person> CompiledSortQuery = ExpressionSortQueryBuilder<Person>.Instance.SortBy(NameExpression, SortDirection.Ascending).SortBy(AgeExpression, SortDirection.Descending).BuildAndReset();
+    public static readonly DefaultSortQueryBuilderFactory<Person> DefaultQueryBuilderFactory = DefaultSortQueryBuilderFactory<Person>.Instance;
+    public static readonly ISortQuery<Person> CompiledSortQuery = new ExpressionSortQueryBuilder<Person>().SortBy(NameExpression, SortDirection.Ascending).SortBy(AgeExpression, SortDirection.Descending).Build();
 
     [Benchmark]
     public List<Person> Default()
     {
-        return DefaultQueryBuilder
+        return DefaultQueryBuilderFactory
+            .Create()
             .SortBy(NameExpression, SortDirection.Ascending)
             .SortBy(AgeExpression, SortDirection.Descending)
+            .Build()
             .Apply(People)
             .ToList();
     }

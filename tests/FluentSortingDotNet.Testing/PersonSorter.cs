@@ -3,8 +3,8 @@ using FluentSortingDotNet.Queries;
 
 namespace FluentSortingDotNet.Testing;
 
-public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQueryBuilder<Person>? sortQueryBuilder = null, ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder = null) 
-    : Sorter<Person>(GetParser(parser), GetSortQueryBuilder(sortQueryBuilder), GetDefaultParameterSortQueryBuilder(defaultParameterSortQueryBuilder))
+public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQueryBuilderFactory<Person>? sortQueryBuilderBuilder = null, ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder = null) 
+    : Sorter<Person>(GetParser(parser), GetSortQueryBuilderFactory(sortQueryBuilderBuilder), GetDefaultParameterSortQueryBuilder(defaultParameterSortQueryBuilder))
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
@@ -13,6 +13,6 @@ public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQuery
     }
 
     private static ISortParameterParser GetParser(ISortParameterParser? parser) => parser ?? DefaultSortParameterParser.Instance;
-    private static ISortQueryBuilder<Person> GetSortQueryBuilder(ISortQueryBuilder<Person>? sortQueryBuilder) => sortQueryBuilder ?? DefaultSortQueryBuilder<Person>.Instance;
-    private static ISortQueryBuilder<Person> GetDefaultParameterSortQueryBuilder(ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder) => defaultParameterSortQueryBuilder ?? ExpressionSortQueryBuilder<Person>.Instance;
+    private static ISortQueryBuilderFactory<Person> GetSortQueryBuilderFactory(ISortQueryBuilderFactory<Person>? sortQueryBuilderFactory) => sortQueryBuilderFactory ?? DefaultSortQueryBuilderFactory<Person>.Instance;
+    private static ISortQueryBuilder<Person> GetDefaultParameterSortQueryBuilder(ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder) => defaultParameterSortQueryBuilder ?? new ExpressionSortQueryBuilder<Person>();
 }

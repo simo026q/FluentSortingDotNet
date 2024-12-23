@@ -9,11 +9,6 @@ namespace FluentSortingDotNet.Queries;
 /// <inheritdoc />
 public sealed class ExpressionSortQueryBuilder<T> : ISortQueryBuilder<T>
 {
-    /// <summary>
-    /// Gets the singleton instance of the <see cref="ExpressionSortQueryBuilder{T}"/> class.
-    /// </summary>
-    public static readonly ExpressionSortQueryBuilder<T> Instance = new();
-
     private static readonly Type Type = typeof(T);
     private static readonly ParameterExpression QueryParameter = Expression.Parameter(typeof(IQueryable<T>), "query");
     private static readonly ParameterExpression LambdaParameter = Expression.Parameter(Type, "x");
@@ -22,16 +17,6 @@ public sealed class ExpressionSortQueryBuilder<T> : ISortQueryBuilder<T>
 
     /// <inheritdoc />
     public bool IsEmpty => _sortExpression == null;
-
-    private ExpressionSortQueryBuilder()
-    {
-    }
-
-    /// <inheritdoc />
-    public void Reset()
-    {
-        _sortExpression = null;
-    }
 
     /// <inheritdoc />
     public ISortQueryBuilder<T> SortBy(LambdaExpression expression, SortDirection direction)
