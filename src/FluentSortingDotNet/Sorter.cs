@@ -150,17 +150,17 @@ public abstract class Sorter<T>
 
         while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
         {
-            if (_parser.TryParseParameter(parameter, out SortParameter sortParameter))
+            if (!_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
-                if (_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
-                {
-                    queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
-                }
+                return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
+            }
 
+            if (!_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
+            {
                 return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
             }
 
-            return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
+            queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
         }
 
         if (queryBuilder.IsEmpty)
