@@ -20,6 +20,7 @@ public abstract class Sorter<T>
     private readonly ISortParameterParser _parser;
     private readonly ISortQueryBuilderFactory<T> _queryBuilderFactory;
     private readonly ISortQuery<T> _defaultQuery;
+    private readonly SorterOptions _options;
 
     private readonly IDictionary<string, SortableParameter> _parameters;
 
@@ -29,17 +30,19 @@ public abstract class Sorter<T>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
     /// <param name="sortQueryBuilderFactory">The factory used to create a query builder for applying the sort parameters.</param>
     /// <param name="defaultParameterSortQueryBuilder">The query builder used for applying the default sort parameters.</param>
-    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory, ISortQueryBuilder<T> defaultParameterSortQueryBuilder)
+    /// <param name="options">The options to use for the sorter.</param>
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory, ISortQueryBuilder<T> defaultParameterSortQueryBuilder, SorterOptions? options = null)
     {
         _parser = parser;
         _queryBuilderFactory = sortQueryBuilderFactory;
+        _options = options ?? SorterOptions.Default;
 
         var builder = new SortBuilder<T>();
         Configure(builder);
 
         List<SortableParameter> parameters = builder.Build();
 
-        var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count);
+        var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count, _options.ParameterNameComparer);
 
         foreach (SortableParameter parameter in parameters)
         {
@@ -85,18 +88,21 @@ public abstract class Sorter<T>
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
     /// <param name="sortQueryBuilderFactory">The factory used to create a query builder for applying the sort parameters.</param>
-    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory) : this(parser, sortQueryBuilderFactory, new ExpressionSortQueryBuilder<T>()) { }
+    /// <param name="options">The options to use for the sorter.</param>
+    protected Sorter(ISortParameterParser parser, ISortQueryBuilderFactory<T> sortQueryBuilderFactory, SorterOptions? options = null) : this(parser, sortQueryBuilderFactory, new ExpressionSortQueryBuilder<T>(), options) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort query builder.
     /// </summary>
     /// <param name="parser">The parser to use to parse the string based sort query.</param>
-    protected Sorter(ISortParameterParser parser) : this(parser, DefaultSortQueryBuilderFactory<T>.Instance) { }
+    /// <param name="options">The options to use for the sorter.</param>
+    protected Sorter(ISortParameterParser parser, SorterOptions? options = null) : this(parser, DefaultSortQueryBuilderFactory<T>.Instance, options) { }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Sorter{T}"/> class with the default sort parameter parser.
     /// </summary>
-    protected Sorter() : this(DefaultSortParameterParser.Instance) { }
+    /// <param name="options">The options to use for the sorter.</param>
+    protected Sorter(SorterOptions? options = null) : this(DefaultSortParameterParser.Instance, options) { }
 
     /// <summary>
     /// Configures the sorter with the sort parameters.
