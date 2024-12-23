@@ -15,11 +15,6 @@ public interface ISortQueryBuilder<T>
     bool IsEmpty { get; }
 
     /// <summary>
-    /// Resets the query builder to its initial state.
-    /// </summary>
-    void Reset();
-
-    /// <summary>
     /// Sorts the query by the specified expression and sort direction.
     /// </summary>
     /// <param name="expression">The expression to sort by.</param>
