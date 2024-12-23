@@ -25,9 +25,9 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
     protected override void Configure(SortBuilder<Person> builder)
     {
         // when no parameters are provided, sort by name descending
-        builder.ForParameter(p => p.Name).Name("name").Default(SortDirection.Descending);
+        builder.ForParameter(p => p.Name, name: "name").Default(SortDirection.Descending);
 
-        builder.ForParameter(p => p.Age).Name("age");
+        builder.ForParameter(p => p.Age, name: "age");
     }
 }
 ```
@@ -62,7 +62,7 @@ services.AddSingleton<PersonSorter>();
 
 ## Extensibility
 
-The codebase is intentionally not very extensible. This is because the library is in a early stage and I want to see how it is used before adding more features. If you have any suggestions, please open an issue.
+Extensibility will be improved hand in hand with the stability of the library. The API is currently subject to breaking changes. If you have any suggestions, please open an issue.
 
 ### Custom Sort Parameter Parser
 
@@ -129,6 +129,10 @@ public sealed class PersonSorter() : Sorter<Person>(new CustomSortParameterParse
 }
 ```
 
+### Custom Query Builder
+
+To create a custom query builder, implement the `ISortQueryBuilder` interface along with a `ISortQueryBuilderFactory` that creates the query builder. This will rarely be needed since the default query builder is very efficient. Be default the `DefaultSortQueryBuilderFactory<T>` is used to create dynamic queries and the `ExpressionSortQueryBuilder<T>` is used to create precompiled queries for the default sort parameters.
+
 ## Performance
 
 The library is designed to be fast and memory efficient. The area that is yet to be optimized is the reflection used to call all the `OrderBy` methods.
@@ -142,10 +146,10 @@ It has a slightly worse performance (when using a sort query string) than callin
 The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
 Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
 
-![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.2.png "Query building benchmark results")
+![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.3.png "Query building benchmark results")
 
 #### Parsing
 
 The parsing has no real-world impact on performance.
 
-![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.2.png "Parsing benchmark results")
+![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.3.png "Parsing benchmark results")
