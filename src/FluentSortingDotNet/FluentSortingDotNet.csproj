@@ -16,6 +16,7 @@
 	<PackageProjectUrl>https://github.com/simo026q/FluentSortingDotNet</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/simo026q/FluentSortingDotNet</RepositoryUrl>
 	<Description>Apply sorting from a string (e.g. query string) with a FluentValidation-like API.</Description>
+	<PackageTags>sorting, fluent, query, string, linq, order, by</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
