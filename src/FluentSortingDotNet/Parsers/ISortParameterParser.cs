@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluentSortingDotNet.Parser;
+namespace FluentSortingDotNet.Parsers;
 
 /// <summary>
 /// Represents a parser that can parse a string into a collection of <see cref="SortParameter"/>.

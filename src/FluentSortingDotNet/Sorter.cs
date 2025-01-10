@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentSortingDotNet.Internal;
-using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Parsers;
 using FluentSortingDotNet.Queries;
 
 #if NET8_0_OR_GREATER

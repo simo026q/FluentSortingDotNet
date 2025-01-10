@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluentSortingDotNet.Parser;
+namespace FluentSortingDotNet.Parsers;
 
 /// <inheritdoc />
 public sealed class DefaultSortParameterParser : SortParameterParser
@@ -31,6 +31,12 @@ public sealed class DefaultSortParameterParser : SortParameterParser
 
         if (parameter[0] == '-')
         {
+            if (parameter.Length == 1)
+            {
+                sortParameter = SortParameter.Empty;
+                return false;
+            }
+
             direction = SortDirection.Descending;
             parameter = parameter.Slice(1);
         }
