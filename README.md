@@ -6,6 +6,14 @@
 Install-Package FluentSortingDotNet
 ```
 
+## Versioning
+
+| Version | Description                                                                                        | API Changes |
+|---------|----------------------------------------------------------------------------------------------------|-------------|
+| Major   | Big breaking changes, new features, and improvements                                               | Yes         |
+| Minor   | New features, improvements, minor breaking changes (e.g. renaming, removing, or adding parameters) | Yes         |
+| Patch   | Bug fixes, performance improvements, and minor changes                                             | No          |
+
 ## Features
 
 - Parse sort parameters from a string in the format `name,-age`
