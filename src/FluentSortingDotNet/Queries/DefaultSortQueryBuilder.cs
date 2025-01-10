@@ -9,6 +9,7 @@ namespace FluentSortingDotNet.Queries;
 /// <inheritdoc />
 public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>, ISortQuery<T>
 {
+    private bool _built;
     private readonly List<SortExpression> _sortExpressions = new();
 
     /// <inheritdoc />
@@ -27,12 +28,17 @@ public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>, ISortQuer
         if (IsEmpty)
             throw new InvalidOperationException("No sorting expressions have been added.");
 
+        _built = true;
         return this;
     }
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">Thrown when the query has not been built.</exception>
     public IQueryable<T> Apply(IQueryable<T> query)
     {
+        if (!_built)
+            throw new InvalidOperationException("Cannot apply sorting to an unbuilt query.");
+
         IOrderedQueryable<T>? orderedQuery = null;
 
         foreach (SortExpression expression in _sortExpressions)

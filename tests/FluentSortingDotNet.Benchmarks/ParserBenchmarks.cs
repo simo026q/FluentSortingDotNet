@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using FluentSortingDotNet;
-using FluentSortingDotNet.Parser;
+using FluentSortingDotNet.Parsers;
 
 [MemoryDiagnoser(false)]
 public class ParserBenchmarks

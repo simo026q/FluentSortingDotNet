@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluentSortingDotNet.Parser;
+namespace FluentSortingDotNet.Parsers;
 
 /// <inheritdoc />
 public abstract class SortParameterParser : ISortParameterParser

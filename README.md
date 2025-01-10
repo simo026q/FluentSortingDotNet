@@ -1,5 +1,11 @@
 # FluentSortingDotNet
 
+## Installation
+
+```bash
+Install-Package FluentSortingDotNet
+```
+
 ## Features
 
 - Parse sort parameters from a string in the format `name,-age`

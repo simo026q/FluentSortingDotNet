@@ -1,4 +1,4 @@
-﻿using FluentSortingDotNet.Parser;
+﻿using FluentSortingDotNet.Parsers;
 using FluentSortingDotNet.Queries;
 
 namespace FluentSortingDotNet.Testing;
