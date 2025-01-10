@@ -34,6 +34,9 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
         builder.ForParameter(p => p.Name, name: "name").Default(SortDirection.Descending);
 
         builder.ForParameter(p => p.Age, name: "age");
+
+        // ignore case when sorting by name
+        builder.IgnoreParameterCase();
     }
 }
 ```

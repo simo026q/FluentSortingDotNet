@@ -35,10 +35,11 @@ public abstract class Sorter<T>
     {
         _parser = parser;
         _queryBuilderFactory = sortQueryBuilderFactory;
-        _options = options ?? SorterOptions.Default;
 
-        var builder = new SortBuilder<T>();
+        var builder = new SortBuilder<T>(options);
         Configure(builder);
+
+        _options = builder.Options ?? SorterOptions.Default;
 
         List<SortableParameter> parameters = builder.Build();
 
