@@ -31,9 +31,9 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
     protected override void Configure(SortBuilder<Person> builder)
     {
         // when no parameters are provided, sort by name descending
-        builder.ForParameter(p => p.Name, name: "name").Default(SortDirection.Descending);
+        builder.ForParameter(p => p.Name).WithName("name").IsDefault(direction: SortDirection.Descending);
 
-        builder.ForParameter(p => p.Age, name: "age");
+        builder.ForParameter(p => p.DateOfBirth).WithName("age");
 
         // ignore case when sorting by name
         builder.IgnoreParameterCase();
