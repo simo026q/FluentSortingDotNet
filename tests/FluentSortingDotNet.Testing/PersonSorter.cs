@@ -8,7 +8,7 @@ public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQuery
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
-        builder.ForParameter(p => p.Name, "name").Default(SortDirection.Descending);
+        builder.ForParameter(p => p.Name, "name").IsDefault(SortDirection.Descending);
         builder.ForParameter(p => p.Age, "age");
     }
 

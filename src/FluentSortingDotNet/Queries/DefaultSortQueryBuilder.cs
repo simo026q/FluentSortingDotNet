@@ -6,7 +6,10 @@ using FluentSortingDotNet.Internal;
 
 namespace FluentSortingDotNet.Queries;
 
-/// <inheritdoc />
+/// <summary>
+/// Represents a class that can build a sort query.
+/// </summary>
+/// <typeparam name="T">The type of items to sort.</typeparam>
 public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>, ISortQuery<T>
 {
     private bool _built;

@@ -13,6 +13,24 @@ public sealed class SortBuilder<T>
 {
     private readonly List<SortableParameter> _sortableParameters = new();
 
+    internal SorterOptions? Options { get; private set; }
+
+    internal SortBuilder(SorterOptions? options)
+    {
+        Options = options;
+    }
+
+    /// <summary>
+    /// Ignores the case when comparing parameter names.
+    /// </summary>
+    /// <returns>The current builder instance.</returns>
+    public SortBuilder<T> IgnoreParameterCase()
+    {
+        Options ??= new();
+        Options.ParameterNameComparer = StringComparer.OrdinalIgnoreCase;
+        return this;
+    }
+
     /// <summary>
     /// Creates a new <see cref="SortParameterBuilder"/> for the specified property.
     /// </summary>

@@ -6,6 +6,14 @@
 Install-Package FluentSortingDotNet
 ```
 
+## Versioning
+
+| Version | Description                                                                                        | API Changes |
+|---------|----------------------------------------------------------------------------------------------------|-------------|
+| Major   | Big breaking changes, new features, and improvements                                               | Yes         |
+| Minor   | New features, improvements, minor breaking changes (e.g. renaming, removing, or adding parameters) | Yes         |
+| Patch   | Bug fixes, performance improvements, and minor changes                                             | No          |
+
 ## Features
 
 - Parse sort parameters from a string in the format `name,-age`
@@ -31,9 +39,12 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
     protected override void Configure(SortBuilder<Person> builder)
     {
         // when no parameters are provided, sort by name descending
-        builder.ForParameter(p => p.Name, name: "name").Default(SortDirection.Descending);
+        builder.ForParameter(p => p.Name).WithName("name").IsDefault(direction: SortDirection.Descending);
 
-        builder.ForParameter(p => p.Age, name: "age");
+        builder.ForParameter(p => p.DateOfBirth).WithName("age");
+
+        // ignore case when sorting by name
+        builder.IgnoreParameterCase();
     }
 }
 ```
@@ -137,7 +148,7 @@ public sealed class PersonSorter() : Sorter<Person>(new CustomSortParameterParse
 
 ### Custom Query Builder
 
-To create a custom query builder, implement the `ISortQueryBuilder` interface along with a `ISortQueryBuilderFactory` that creates the query builder. This will rarely be needed since the default query builder is very efficient. Be default the `DefaultSortQueryBuilderFactory<T>` is used to create dynamic queries and the `ExpressionSortQueryBuilder<T>` is used to create precompiled queries for the default sort parameters.
+To create a custom query builder, implement the `ISortQueryBuilder` interface along with a `ISortQueryBuilderFactory` that creates the query builder. This will rarely be needed since the default query builder is very efficient. By default the `DefaultSortQueryBuilderFactory<T>` is used to create dynamic queries and the `ExpressionSortQueryBuilder<T>` is used to create precompiled queries for the default sort parameters.
 
 ## Performance
 
