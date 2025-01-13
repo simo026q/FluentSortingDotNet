@@ -34,7 +34,8 @@ public record Person(string Name, int Age);
 ```csharp
 using FluentSortingDotNet;
 
-public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser) // The Sorter class also have an empty constructor that uses the DefaultSortParameterParser
+// The Sorter class also have an empty constructor that uses the DefaultSortParameterParser
+public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
