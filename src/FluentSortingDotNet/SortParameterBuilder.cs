@@ -20,12 +20,9 @@ public sealed class SortParameterBuilder
     /// </summary>
     /// <param name="sortDirection">The sort direction of the default parameter.</param>
     /// <returns>The current builder instance.</returns>
-    [Obsolete("Use IsDefault instead.", error: false)]
-    public SortParameterBuilder Default(SortDirection sortDirection)
-    {
-        _parameter.DefaultDirection = sortDirection;
-        return this;
-    }
+    [Obsolete("Use IsDefault instead. This method will be removed in the next major or minor version.", error: true)]
+    public SortParameterBuilder Default(SortDirection sortDirection) 
+        => IsDefault(sortDirection);
 
     /// <summary>
     /// Set the sort parameter as a default parameter when the sort query is empty.
@@ -43,12 +40,9 @@ public sealed class SortParameterBuilder
     /// </summary>
     /// <param name="name">The name of the parameter.</param>
     /// <returns>The current builder instance.</returns>
-    [Obsolete("Use WithName instead.", error: false)]
-    public SortParameterBuilder Name(string name)
-    {
-        _parameter.Name = name;
-        return this;
-    }
+    [Obsolete("Use WithName instead. This method will be removed in the next major or minor version.", error: true)]
+    public SortParameterBuilder Name(string name) 
+        => WithName(name);
 
     /// <summary>
     /// Set the name of the sort parameter. By default, the name is inferred from the property expression.
