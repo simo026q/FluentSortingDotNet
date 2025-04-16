@@ -17,4 +17,9 @@ public sealed class SorterOptions
     /// Gets or sets the comparer to use to compare the parameter names. The default is <see cref="StringComparer.Ordinal"/>.
     /// </summary>
     public IEqualityComparer<string> ParameterNameComparer { get; set; } = StringComparer.Ordinal;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to ignore invalid parameters. The default is <see langword="false"/>.
+    /// </summary>
+    public bool IgnoreInvalidParameters { get; set; } = false;
 }

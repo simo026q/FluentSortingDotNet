@@ -28,8 +28,17 @@ public sealed class SortBuilder<T>
     /// <returns>The current builder instance.</returns>
     public SortBuilder<T> IgnoreParameterCase()
     {
-        Options ??= new();
         Options.ParameterNameComparer = StringComparer.OrdinalIgnoreCase;
+        return this;
+    }
+
+    /// <summary>
+    /// Ignores all invalid parameters when sorting instead of throwing an exception.
+    /// </summary>
+    /// <returns>The current builder instance.</returns>
+    public SortBuilder<T> IgnoreInvalidParameters()
+    {
+        Options.IgnoreInvalidParameters = true;
         return this;
     }
 

@@ -1,84 +1,204 @@
-﻿using FluentSortingDotNet.Testing;
-using Microsoft.EntityFrameworkCore;
+﻿using FluentSortingDotNet.Parsers;
+using FluentSortingDotNet.Queries;
+using FluentSortingDotNet.Testing;
+using NSubstitute;
 
 namespace FluentSortingDotNet.UnitTests;
 
 public class SorterTests
 {
-    private sealed class PeopleContext(DbContextOptions<PeopleContext> options) : DbContext(options)
+    private static SorterOptions CreateOptions(bool ignoreInvalidParameters = false, IEqualityComparer<string>? parameterNameComparer = null)
+        => new() { IgnoreInvalidParameters = ignoreInvalidParameters, ParameterNameComparer = parameterNameComparer ?? StringComparer.Ordinal };
+
+    private static PersonSorter CreateSorter(ISortParameterParser? parser = null, ISortQueryBuilderFactory<Person>? sortQueryBuilderFactory = null, ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder = null, SorterOptions? options = null)
+        => new(parser, sortQueryBuilderFactory, defaultParameterSortQueryBuilder, options);
+
+    [Fact]
+    public void CreateSortQuery_ShouldThrowArgumentException_WhenSortContextIsInvalid()
     {
-        public DbSet<Person> People { get; set; } = null!;
+        // Arrange
+        SorterOptions options = CreateOptions(ignoreInvalidParameters: false);
+        Sorter<Person> sorter = CreateSorter(options: options);
+        SortContext<Person> sortContext = new(Array.Empty<SortParameter>(), ["invalid_parameter"]);
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Person>().HasKey(p => p.Name);
-        }
-    }
+        // Act
+        Action act = () => sorter.CreateSortQuery(sortContext);
 
-    private readonly PeopleContext _dbContext;
-    private readonly List<Person> _people;
-    private readonly PersonSorter _sorter = new();
-
-    public SorterTests()
-    {
-        DbContextOptions<PeopleContext> options = new DbContextOptionsBuilder<PeopleContext>()
-            .UseInMemoryDatabase(nameof(SorterTests))
-            .Options;
-
-        _dbContext = new PeopleContext(options);
-        _people = Person.Faker.UseSeed(2024).Generate(10);
+        // Assert
+        Assert.Throws<ArgumentException>(act);
     }
 
     [Fact]
-    public void Sort_WithValidSortParameter_SortsCorrectly()
+    public void CreateSortQuery_ShouldNotThrow_WhenIgnoreInvalidParametersIsTrue()
     {
         // Arrange
-        _dbContext.Database.EnsureDeleted();
-        _dbContext.AddRange(_people);
-        _dbContext.SaveChanges();
+        ISortQuery<Person> defaultSortQuery = Substitute.For<ISortQuery<Person>>();
+        ISortQueryBuilder<Person> sortQueryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        sortQueryBuilder.IsEmpty.Returns(false);
+        sortQueryBuilder.Build().Returns(defaultSortQuery);
+
+        SorterOptions options = CreateOptions(ignoreInvalidParameters: true);
+
+        Sorter<Person> sorter = CreateSorter(
+            defaultParameterSortQueryBuilder: sortQueryBuilder,
+            options: options);
+
+        SortContext<Person> sortContext = new(Array.Empty<SortParameter>(), ["invalid_parameter"]);
 
         // Act
-        IQueryable<Person> queryable = _dbContext.People;
-        SortResult result = _sorter.Sort(ref queryable, "name");
+        var sortQuery = sorter.CreateSortQuery(sortContext);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(_people.OrderBy(p => p.Name).Select(p => p.Name), queryable.Select(p => p.Name));
-        Assert.Empty(result.InvalidSortParameters);
+        Assert.NotNull(sortQuery);
+        Assert.Same(defaultSortQuery, sortQuery);
     }
 
     [Fact]
-    public void Sort_InvalidSortParameter_ReturnsInvalidSortParameters()
+    public void CreateSortQuery_ShouldReturnDefaultSortQuery_WhenSortContextIsEmpty()
     {
         // Arrange
-        _dbContext.Database.EnsureDeleted();
-        _dbContext.AddRange(_people);
-        _dbContext.SaveChanges();
+        ISortQuery<Person> defaultSortQuery = Substitute.For<ISortQuery<Person>>();
+        ISortQueryBuilder<Person> sortQueryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        sortQueryBuilder.IsEmpty.Returns(false);
+        sortQueryBuilder.Build().Returns(defaultSortQuery);
+
+        SorterOptions options = CreateOptions(ignoreInvalidParameters: false);
+
+        Sorter<Person> sorter = CreateSorter(
+            defaultParameterSortQueryBuilder: sortQueryBuilder,
+            options: options);
 
         // Act
-        IQueryable<Person> queryable = _dbContext.People;
-        SortResult result = _sorter.Sort(ref queryable, "invalid");
+        var sortQuery = sorter.CreateSortQuery(SortContext<Person>.Empty);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(["invalid"], result.InvalidSortParameters);
+        Assert.NotNull(sortQuery);
+        Assert.Same(defaultSortQuery, sortQuery);
     }
 
     [Fact]
-    public void Sort_WithEmptySortQuery_SortsWithDefaultSortParameters()
+    public void CreateSortQuery_ShouldReturnDefaultSortQuery_WhenQueryBuilderIsEmpty()
     {
         // Arrange
-        _dbContext.Database.EnsureDeleted();
-        _dbContext.AddRange(_people);
-        _dbContext.SaveChanges();
+        ISortQueryBuilder<Person> queryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        queryBuilder.IsEmpty.Returns(true);
+
+        ISortQueryBuilderFactory<Person> queryBuilderFactory = Substitute.For<ISortQueryBuilderFactory<Person>>();
+        queryBuilderFactory.Create().Returns(queryBuilder);
+
+        ISortQuery<Person> defaultQuery = Substitute.For<ISortQuery<Person>>();
+        ISortQueryBuilder<Person> defaultQueryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        defaultQueryBuilder.IsEmpty.Returns(false);
+        defaultQueryBuilder.Build().Returns(defaultQuery);
+
+        SorterOptions options = CreateOptions(parameterNameComparer: StringComparer.OrdinalIgnoreCase);
+
+        Sorter<Person> sorter = CreateSorter(
+            sortQueryBuilderFactory: queryBuilderFactory,
+            defaultParameterSortQueryBuilder: defaultQueryBuilder,
+            options: options);
+
+        SortContext<Person> sortContext = new([new SortParameter(nameof(Person.Name), SortDirection.Ascending)], Array.Empty<string>());
 
         // Act
-        IQueryable<Person> queryable = _dbContext.People;
-        SortResult result = _sorter.Sort(ref queryable, string.Empty);
+        var sortQuery = sorter.CreateSortQuery(sortContext);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(_people.OrderByDescending(p => p.Name).Select(p => p.Name), queryable.Select(p => p.Name));
-        Assert.Empty(result.InvalidSortParameters);
+        Assert.NotNull(sortQuery);
+        Assert.Same(defaultQuery, sortQuery);
+    }
+
+    [Fact]
+    public void CreateSortQuery_ShouldBuildQuery_WhenSortContextIsValid()
+    {
+        // Arrange
+        ISortQuery<Person> query = Substitute.For<ISortQuery<Person>>();
+        ISortQueryBuilder<Person> queryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        queryBuilder.IsEmpty.Returns(false);
+        queryBuilder.Build().Returns(query);
+
+        ISortQueryBuilderFactory<Person> queryBuilderFactory = Substitute.For<ISortQueryBuilderFactory<Person>>();
+        queryBuilderFactory.Create().Returns(queryBuilder);
+
+        SorterOptions options = CreateOptions(parameterNameComparer: StringComparer.OrdinalIgnoreCase);
+
+        Sorter<Person> sorter = CreateSorter(
+            sortQueryBuilderFactory: queryBuilderFactory,
+            options: options);
+
+        SortContext<Person> sortContext = new([new SortParameter(nameof(Person.Name), SortDirection.Ascending)], Array.Empty<string>());
+        
+        // Act
+        var sortQuery = sorter.CreateSortQuery(sortContext);
+        
+        // Assert
+        Assert.NotNull(sortQuery);
+        Assert.Same(query, sortQuery);
+    }
+
+    [Fact]
+    public void Validate_ShouldReturnEmptyContext_WhenNoParametersProvided()
+    {
+        // Arrange
+        var query = "".AsSpan();
+        Sorter<Person> sorter = CreateSorter();
+
+        // Act
+        var sortContext = sorter.Validate(query);
+
+        // Assert
+        Assert.True(sortContext.IsEmpty);
+        Assert.True(sortContext.IsValid);
+    }
+
+    [Fact]
+    public void Validate_ShouldReturnInvalidContext_WhenUnparsableParametersProvided()
+    {
+        // Arrange
+        var query = "-";
+        Sorter<Person> sorter = CreateSorter();
+
+        // Act
+        var sortContext = sorter.Validate(query.AsSpan());
+
+        // Assert
+        Assert.True(sortContext.IsEmpty);
+        Assert.False(sortContext.IsValid);
+        Assert.Single(sortContext.InvalidParameters);
+        Assert.Equal(query, sortContext.InvalidParameters[0]);
+    }
+
+    [Fact]
+    public void Validate_ShouldReturnInvalidContext_WhenNonExistentParametersProvided()
+    {
+        // Arrange
+        var query = "invalid_parameter";
+        Sorter<Person> sorter = CreateSorter();
+
+        // Act
+        var sortContext = sorter.Validate(query.AsSpan());
+
+        // Assert
+        Assert.True(sortContext.IsEmpty);
+        Assert.False(sortContext.IsValid);
+        Assert.Single(sortContext.InvalidParameters);
+        Assert.Equal(query, sortContext.InvalidParameters[0]);
+    }
+
+    [Fact]
+    public void Validate_ShouldReturnValidContext_WhenValidParametersProvided()
+    {
+        // Arrange
+        var query = "name,age";
+        Sorter<Person> sorter = CreateSorter();
+
+        // Act
+        var sortContext = sorter.Validate(query.AsSpan());
+
+        // Assert
+        Assert.False(sortContext.IsEmpty);
+        Assert.True(sortContext.IsValid);
+        Assert.Empty(sortContext.InvalidParameters);
+        Assert.Equal(2, sortContext.ValidParameters.Count);
     }
 }

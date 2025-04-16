@@ -3,8 +3,8 @@ using FluentSortingDotNet.Queries;
 
 namespace FluentSortingDotNet.Testing;
 
-public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQueryBuilderFactory<Person>? sortQueryBuilderBuilder = null, ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder = null) 
-    : Sorter<Person>(GetParser(parser), GetSortQueryBuilderFactory(sortQueryBuilderBuilder), GetDefaultParameterSortQueryBuilder(defaultParameterSortQueryBuilder))
+public sealed class PersonSorter(ISortParameterParser? parser = null, ISortQueryBuilderFactory<Person>? sortQueryBuilderFactory = null, ISortQueryBuilder<Person>? defaultParameterSortQueryBuilder = null, SorterOptions? options = null) 
+    : Sorter<Person>(GetParser(parser), GetSortQueryBuilderFactory(sortQueryBuilderFactory), GetDefaultParameterSortQueryBuilder(defaultParameterSortQueryBuilder), options)
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
