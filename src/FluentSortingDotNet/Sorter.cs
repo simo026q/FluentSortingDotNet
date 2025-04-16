@@ -67,7 +67,7 @@ public abstract class Sorter<T>
         }
 
 #if NET8_0_OR_GREATER
-        _parameters = parametersDictionary.ToFrozenDictionary();
+        _parameters = parametersDictionary.ToFrozenDictionary(_options.ParameterNameComparer);
 #else
         _parameters = parametersDictionary;
 #endif
