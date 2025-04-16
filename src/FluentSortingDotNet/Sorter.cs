@@ -38,7 +38,7 @@ public abstract class Sorter<T>
         var builder = new SortBuilder<T>(options);
         Configure(builder);
 
-        options = builder.Options ?? SorterOptions.Default;
+        options = builder.Options;
 
         List<SortableParameter> parameters = builder.Build();
 

@@ -12,12 +12,14 @@ namespace FluentSortingDotNet;
 public sealed class SortBuilder<T>
 {
     private readonly List<SortableParameter> _sortableParameters = new();
+    private SorterOptions? _options;
 
-    internal SorterOptions? Options { get; private set; }
+    internal SorterOptions Options 
+        => _options ??= SorterOptions.Default;
 
     internal SortBuilder(SorterOptions? options)
     {
-        Options = options;
+        _options = options;
     }
 
     /// <summary>
