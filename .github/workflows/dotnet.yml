@@ -30,7 +30,7 @@ jobs:
     - name: Read benchmark results
       id: read_benchmark
       run: |
-        content=$(cat tests/FluentSortingDotNet.Benchmarks/BenchmarkDotNet.Artifacts/results/*-report.md)
+        content=$(cat BenchmarkDotNet.Artifacts/results/*-report-github.md)
         echo "content<<EOF" >> $GITHUB_OUTPUT
         echo "$content" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
