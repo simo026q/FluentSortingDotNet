@@ -25,3 +25,21 @@ jobs:
       run: dotnet build --no-restore /warnaserror
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Run benchmarks
+      run: dotnet run --no-build --configuration Release --project FluentSortingDotNet.Benchmarks 
+    - name: Read benchmark results
+      id: read_benchmark
+      run: |
+        content=$(cat FluentSortingDotNet.Benchmarks/BenchmarkDotNet.Artifacts/results/*-report.md)
+        echo "content<<EOF" >> $GITHUB_OUTPUT
+        echo "$content" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    - name: Post benchmark comment
+      if: github.event_name == 'pull_request'
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ## Benchmark Results
+          ${{ steps.read_benchmark.outputs.content }}
