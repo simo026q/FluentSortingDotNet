@@ -1,10 +1,10 @@
-﻿using System;
+﻿using FluentSortingDotNet.Internal;
+using FluentSortingDotNet.Parsers;
+using FluentSortingDotNet.Queries;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using FluentSortingDotNet.Internal;
-using FluentSortingDotNet.Parsers;
-using FluentSortingDotNet.Queries;
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -74,8 +74,8 @@ public abstract class Sorter<T> : ISorter<T>
         _parameters = parametersDictionary;
 #endif
 
-        _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty 
-            ? NullSortQuery<T>.Instance 
+        _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty
+            ? NullSortQuery<T>.Instance
             : defaultParameterSortQueryBuilder.Build();
 
         static InvalidOperationException ParameterAlreadyExists(string name)
@@ -118,7 +118,7 @@ public abstract class Sorter<T> : ISorter<T>
     /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
     [Obsolete("This method is obsolete and will be removed in a future version. Use CreateSortQuery(SortContext<T>) or extensions methods instead.", error: false)]
-    public SortResult Sort(ref IQueryable<T> query) 
+    public SortResult Sort(ref IQueryable<T> query)
         => Sort(ref query, ReadOnlySpan<char>.Empty);
 
     /// <summary>
@@ -177,12 +177,21 @@ public abstract class Sorter<T> : ISorter<T>
                 throw new InvalidOperationException($"The parameter '{sortParameter.Name}' is not valid.");
             }
 
-            queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
+            queryBuilder.SortBy(
+                sortableParameter.Expression,
+                GetDirection(sortParameter.Direction, sortableParameter.ShouldReverseDirection));
         }
 
-        return queryBuilder.IsEmpty 
-            ? _defaultQuery 
+        return queryBuilder.IsEmpty
+            ? _defaultQuery
             : queryBuilder.Build();
+
+        static SortDirection GetDirection(SortDirection sortDirection, bool reverse)
+        {
+            return reverse
+                ? sortDirection == SortDirection.Ascending ? SortDirection.Descending : SortDirection.Ascending
+                : sortDirection;
+        }
     }
 
     /// <inheritdoc/>
