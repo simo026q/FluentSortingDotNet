@@ -26,7 +26,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Run benchmarks
-      run: dotnet run --no-build --configuration Release --project tests/FluentSortingDotNet.Benchmarks 
+      run: dotnet run --configuration Release --project tests/FluentSortingDotNet.Benchmarks 
     - name: Read benchmark results
       id: read_benchmark
       run: |
