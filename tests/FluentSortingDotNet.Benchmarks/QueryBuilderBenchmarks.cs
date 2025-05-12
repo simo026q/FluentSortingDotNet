@@ -4,7 +4,7 @@ using FluentSortingDotNet.Queries;
 using FluentSortingDotNet.Testing;
 using System.Linq.Expressions;
 
-[MemoryDiagnoser(false)]
+[MemoryDiagnoser(false), MarkdownExporter]
 public class QueryBuilderBenchmarks
 {
     public static readonly IQueryable<Person> People = PersonGenerator.Instance.UseSeed(2024).Generate(10).AsQueryable();
