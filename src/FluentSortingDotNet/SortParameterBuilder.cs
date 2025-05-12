@@ -35,4 +35,14 @@ public sealed class SortParameterBuilder
         _parameter.Name = name;
         return this;
     }
+
+    /// <summary>
+    /// Set the sort parameter to be reversed when sorting.
+    /// </summary>
+    /// <returns>The current builder instance.</returns>
+    public SortParameterBuilder ReverseDirection()
+    {
+        _parameter.ShouldReverseDirection = true;
+        return this;
+    }
 }
