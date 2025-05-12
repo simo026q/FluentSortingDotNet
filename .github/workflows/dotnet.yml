@@ -26,11 +26,11 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Run benchmarks
-      run: dotnet run --no-build --configuration Release --project FluentSortingDotNet.Benchmarks 
+      run: dotnet run --no-build --configuration Release --project tests/FluentSortingDotNet.Benchmarks 
     - name: Read benchmark results
       id: read_benchmark
       run: |
-        content=$(cat FluentSortingDotNet.Benchmarks/BenchmarkDotNet.Artifacts/results/*-report.md)
+        content=$(cat tests/FluentSortingDotNet.Benchmarks/BenchmarkDotNet.Artifacts/results/*-report.md)
         echo "content<<EOF" >> $GITHUB_OUTPUT
         echo "$content" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
