@@ -1,8 +1,8 @@
-﻿using System;
+﻿using FluentSortingDotNet.Internal;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using FluentSortingDotNet.Internal;
 
 namespace FluentSortingDotNet.Queries;
 
@@ -39,9 +39,12 @@ public sealed class ExpressionSortQueryBuilder<T> : ISortQueryBuilder<T>
     public ISortQuery<T> Build()
     {
         if (_sortExpression == null)
+        {
             throw new InvalidOperationException("No sorting expressions have been added.");
+        }
 
-        return new DelegateSortQuery(Expression.Lambda<Func<IQueryable<T>, IQueryable<T>>>(_sortExpression, QueryParameter).Compile());
+        var lambda = Expression.Lambda<Func<IQueryable<T>, IQueryable<T>>>(_sortExpression, QueryParameter).Compile();
+        return new DelegateSortQuery(lambda);
     }
 
     private static LambdaExpression ReplaceParameter(LambdaExpression original, ParameterExpression toReplace, ParameterExpression replacement)

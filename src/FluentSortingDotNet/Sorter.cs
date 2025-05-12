@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FluentSortingDotNet.Internal;
+﻿using FluentSortingDotNet.Internal;
 using FluentSortingDotNet.Parsers;
 using FluentSortingDotNet.Queries;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -15,12 +16,13 @@ namespace FluentSortingDotNet;
 /// Represents a sorter that can sort a <see cref="IQueryable{T}"/> with a string based sort query. 
 /// </summary>
 /// <typeparam name="T">The type of items to sort.</typeparam>
-public abstract class Sorter<T>
+public abstract class Sorter<T> : ISorter<T>
 {
     private readonly ISortParameterParser _parser;
     private readonly ISortQueryBuilderFactory<T> _queryBuilderFactory;
     private readonly ISortQuery<T> _defaultQuery;
 
+    private readonly SorterOptions _options;
     private readonly IDictionary<string, SortableParameter> _parameters;
 
     /// <summary>
@@ -38,11 +40,11 @@ public abstract class Sorter<T>
         var builder = new SortBuilder<T>(options);
         Configure(builder);
 
-        options = builder.Options ?? SorterOptions.Default;
+        _options = builder.Options;
 
         List<SortableParameter> parameters = builder.Build();
 
-        var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count, options.ParameterNameComparer);
+        var parametersDictionary = new Dictionary<string, SortableParameter>(parameters.Count, _options.ParameterNameComparer);
 
         foreach (SortableParameter parameter in parameters)
         {
@@ -67,13 +69,13 @@ public abstract class Sorter<T>
         }
 
 #if NET8_0_OR_GREATER
-        _parameters = parametersDictionary.ToFrozenDictionary();
+        _parameters = parametersDictionary.ToFrozenDictionary(_options.ParameterNameComparer);
 #else
         _parameters = parametersDictionary;
 #endif
 
-        _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty 
-            ? NullSortQuery<T>.Instance 
+        _defaultQuery = defaultParameterSortQueryBuilder.IsEmpty
+            ? NullSortQuery<T>.Instance
             : defaultParameterSortQueryBuilder.Build();
 
         static InvalidOperationException ParameterAlreadyExists(string name)
@@ -115,11 +117,9 @@ public abstract class Sorter<T>
     /// </summary>
     /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
+    [Obsolete("This method is obsolete and will be removed in a future version. Use CreateSortQuery(SortContext<T>) or extensions methods instead.", error: false)]
     public SortResult Sort(ref IQueryable<T> query)
-    {
-        query = _defaultQuery.Apply(query);
-        return SortResult.Success();
-    }
+        => Sort(ref query, ReadOnlySpan<char>.Empty);
 
     /// <summary>
     /// Sorts the <paramref name="query"/> with the specified <paramref name="sortQuery"/>. If <paramref name="sortQuery"/> is <see langword="null"/> or empty, the default sort parameters are used.
@@ -127,6 +127,7 @@ public abstract class Sorter<T>
     /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
     /// <param name="sortQuery">The string based sort query to use to sort the query or <see langword="null"/> to use the default sort parameters.</param>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
+    [Obsolete("This method is obsolete and will be removed in a future version. Use CreateSortQuery(SortContext<T>) or extensions methods instead.", error: false)]
     public SortResult Sort(ref IQueryable<T> query, string? sortQuery)
     {
         // when sortQuery is null, AsSpan() will return default(ReadOnlySpan<char>)
@@ -139,55 +140,84 @@ public abstract class Sorter<T>
     /// <param name="query">The <see cref="IQueryable{T}"/> to sort.</param>
     /// <param name="sortQuerySpan">The string based sort query to use to sort the query.</param>
     /// <returns>A <see cref="SortResult"/> that represents the result of the sorting operation. When <see cref="SortResult.IsSuccess"/> is <see langword="true"/> the refence of <paramref name="query"/> is updated with the sorted <see cref="IQueryable{T}"/>.</returns>
+    [Obsolete("This method is obsolete and will be removed in a future version. Use CreateSortQuery(SortContext<T>) or extensions methods instead.", error: false)]
     public SortResult Sort(ref IQueryable<T> query, ReadOnlySpan<char> sortQuerySpan)
     {
-        if (sortQuerySpan.IsEmpty)
+        var context = Validate(sortQuerySpan);
+        if (!_options.IgnoreInvalidParameters && !context.IsValid)
         {
-            return Sort(ref query);
+            return SortResult.Failure(context.InvalidParameters);
+        }
+
+        query = CreateSortQuery(context).Apply(query);
+        return SortResult.Success();
+    }
+
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException">The <paramref name="sortContext"/> contains invalid parameters and <see cref="SorterOptions.IgnoreInvalidParameters"/> is set to <see langword="false"/>.</exception>
+    public ISortQuery<T> CreateSortQuery(SortContext<T> sortContext)
+    {
+        if (!_options.IgnoreInvalidParameters && !sortContext.IsValid)
+        {
+            throw new ArgumentException("The sort context contains invalid parameters.", nameof(sortContext));
+        }
+
+        if (sortContext.IsEmpty)
+        {
+            return _defaultQuery;
         }
 
         ISortQueryBuilder<T> queryBuilder = _queryBuilderFactory.Create();
 
-        while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
+        foreach (SortParameter sortParameter in sortContext.ValidParameters)
         {
-            if (!_parser.TryParseParameter(parameter, out SortParameter sortParameter))
-            {
-                return SortResult.Failure(GetInvalidParameters(parameter.ToString(), sortQuerySpan));
-            }
-
             if (!_parameters.TryGetValue(sortParameter.Name, out SortableParameter? sortableParameter))
             {
-                return SortResult.Failure(GetInvalidParameters(sortParameter.Name, sortQuerySpan));
+                Debug.Fail("This should never happen. The parameter should have been validated before.");
+                throw new InvalidOperationException($"The parameter '{sortParameter.Name}' is not valid.");
             }
 
-            queryBuilder.SortBy(sortableParameter.Expression, sortParameter.Direction);
+            queryBuilder.SortBy(
+                sortableParameter.Expression,
+                GetDirection(sortParameter.Direction, sortableParameter.ShouldReverseDirection));
         }
 
-        if (queryBuilder.IsEmpty)
+        return queryBuilder.IsEmpty
+            ? _defaultQuery
+            : queryBuilder.Build();
+
+        static SortDirection GetDirection(SortDirection sortDirection, bool reverse)
         {
-            return Sort(ref query);
+            return reverse
+                ? sortDirection == SortDirection.Ascending ? SortDirection.Descending : SortDirection.Ascending
+                : sortDirection;
         }
-
-        query = queryBuilder.Build().Apply(query);
-        return SortResult.Success();
     }
 
-    private List<string> GetInvalidParameters(string intialInvalidParameter, ReadOnlySpan<char> sortQuerySpan)
+    /// <inheritdoc/>
+    public SortContext<T> Validate(ReadOnlySpan<char> sortQuery)
     {
-        var invalidParameters = new List<string>() { intialInvalidParameter };
+        List<SortParameter> validSortParameters = new();
+        List<string>? invalidSortParameters = null;
 
-        while (_parser.TryGetNextParameter(ref sortQuerySpan, out ReadOnlySpan<char> parameter))
+        while (_parser.TryGetNextParameter(ref sortQuery, out ReadOnlySpan<char> parameter))
         {
             if (!_parser.TryParseParameter(parameter, out SortParameter sortParameter))
             {
-                invalidParameters.Add(parameter.ToString());
+                invalidSortParameters ??= new();
+                invalidSortParameters.Add(parameter.ToString());
             }
             else if (!_parameters.ContainsKey(sortParameter.Name))
             {
-                invalidParameters.Add(sortParameter.Name);
+                invalidSortParameters ??= new();
+                invalidSortParameters.Add(sortParameter.Name);
+            }
+            else
+            {
+                validSortParameters.Add(sortParameter);
             }
         }
 
-        return invalidParameters;
+        return new SortContext<T>(validSortParameters, invalidSortParameters);
     }
 }

@@ -12,12 +12,14 @@ namespace FluentSortingDotNet;
 public sealed class SortBuilder<T>
 {
     private readonly List<SortableParameter> _sortableParameters = new();
+    private SorterOptions? _options;
 
-    internal SorterOptions? Options { get; private set; }
+    internal SorterOptions Options 
+        => _options ??= SorterOptions.Default;
 
     internal SortBuilder(SorterOptions? options)
     {
-        Options = options;
+        _options = options;
     }
 
     /// <summary>
@@ -26,8 +28,17 @@ public sealed class SortBuilder<T>
     /// <returns>The current builder instance.</returns>
     public SortBuilder<T> IgnoreParameterCase()
     {
-        Options ??= new();
         Options.ParameterNameComparer = StringComparer.OrdinalIgnoreCase;
+        return this;
+    }
+
+    /// <summary>
+    /// Ignores all invalid parameters when sorting instead of throwing an exception.
+    /// </summary>
+    /// <returns>The current builder instance.</returns>
+    public SortBuilder<T> IgnoreInvalidParameters()
+    {
+        Options.IgnoreInvalidParameters = true;
         return this;
     }
 
