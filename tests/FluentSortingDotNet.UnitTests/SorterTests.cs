@@ -3,7 +3,7 @@ using FluentSortingDotNet.Queries;
 using FluentSortingDotNet.Testing;
 using NSubstitute;
 
-namespace FluentSortingDotNet.UnitTests;
+namespace FluentSortingDotNet.Tests;
 
 public class SorterTests
 {
