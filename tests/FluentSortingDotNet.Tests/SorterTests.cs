@@ -2,6 +2,7 @@
 using FluentSortingDotNet.Queries;
 using FluentSortingDotNet.Testing;
 using NSubstitute;
+using System.Linq.Expressions;
 
 namespace FluentSortingDotNet.Tests;
 
@@ -127,13 +128,39 @@ public class SorterTests
             options: options);
 
         SortContext<Person> sortContext = new([new SortParameter(nameof(Person.Name), SortDirection.Ascending)], Array.Empty<string>());
-        
+
         // Act
         var sortQuery = sorter.CreateSortQuery(sortContext);
-        
+
         // Assert
         Assert.NotNull(sortQuery);
         Assert.Same(query, sortQuery);
+    }
+
+    [Fact]
+    public void CreateSortQuery_ShouldReverseSortDirection_WhenSortableParameterShouldReverseDirectionIsTrue()
+    {
+        // Arrange
+        ISortQuery<Person> query = Substitute.For<ISortQuery<Person>>();
+        ISortQueryBuilder<Person> queryBuilder = Substitute.For<ISortQueryBuilder<Person>>();
+        queryBuilder.IsEmpty.Returns(false);
+        queryBuilder.Build().Returns(query);
+
+        ISortQueryBuilderFactory<Person> queryBuilderFactory = Substitute.For<ISortQueryBuilderFactory<Person>>();
+        queryBuilderFactory.Create().Returns(queryBuilder);
+
+        Sorter<Person> sorter = CreateSorter(
+            sortQueryBuilderFactory: queryBuilderFactory);
+
+        SortContext<Person> sortContext = new([new SortParameter("Age", SortDirection.Descending)], Array.Empty<string>());
+
+        // Act
+        var sortQuery = sorter.CreateSortQuery(sortContext);
+
+        // Assert
+        Assert.NotNull(sortQuery);
+        Assert.Same(query, sortQuery);
+        queryBuilder.Received(1).SortBy(Arg.Is<LambdaExpression>(x => x.ToString() == "p => p.DateOfBirth"), SortDirection.Ascending);
     }
 
     [Fact]
@@ -149,6 +176,8 @@ public class SorterTests
         // Assert
         Assert.True(sortContext.IsEmpty);
         Assert.True(sortContext.IsValid);
+        Assert.Empty(sortContext.InvalidParameters);
+        Assert.Empty(sortContext.ValidParameters);
     }
 
     [Fact]
@@ -189,8 +218,26 @@ public class SorterTests
     public void Validate_ShouldReturnValidContext_WhenValidParametersProvided()
     {
         // Arrange
-        var query = "name,age";
+        var query = "Name,Age";
         Sorter<Person> sorter = CreateSorter();
+
+        // Act
+        var sortContext = sorter.Validate(query.AsSpan());
+
+        // Assert
+        Assert.False(sortContext.IsEmpty);
+        Assert.True(sortContext.IsValid);
+        Assert.Empty(sortContext.InvalidParameters);
+        Assert.Equal(2, sortContext.ValidParameters.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldReturnValidContext_WhenValidParametersProvidedAndIgnoreCase()
+    {
+        // Arrange
+        var query = "nAmE,aGe";
+        SorterOptions options = CreateOptions(parameterNameComparer: StringComparer.OrdinalIgnoreCase);
+        Sorter<Person> sorter = CreateSorter(options: options);
 
         // Act
         var sortContext = sorter.Validate(query.AsSpan());

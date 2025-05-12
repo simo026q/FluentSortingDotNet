@@ -5,8 +5,6 @@ VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet", "src\FluentSortingDotNet\FluentSortingDotNet.csproj", "{F156F26F-6B62-44C3-A53F-7703A9C3BFED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.ConsoleTest", "tests\FluentSortingDotNet.ConsoleTest\FluentSortingDotNet.ConsoleTest.csproj", "{520AD80C-9C18-44CB-85AB-18A04C7D41D1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5CF6B4C7-248A-44EB-9B78-9DC5C7E004C4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D5F916DA-2A0B-4B72-854A-D19FDFF0C2EF}"
@@ -15,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.Benchma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.Testing", "tests\FluentSortingDotNet.Testing\FluentSortingDotNet.Testing.csproj", "{95003460-2CF1-4CC4-9089-194B8C570A34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.UnitTests", "tests\FluentSortingDotNet.UnitTests\FluentSortingDotNet.UnitTests.csproj", "{3A17280E-7BA2-4219-8E76-F45CBAB12144}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSortingDotNet.Tests", "tests\FluentSortingDotNet.Tests\FluentSortingDotNet.Tests.csproj", "{3A17280E-7BA2-4219-8E76-F45CBAB12144}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +25,6 @@ Global
 		{F156F26F-6B62-44C3-A53F-7703A9C3BFED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F156F26F-6B62-44C3-A53F-7703A9C3BFED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F156F26F-6B62-44C3-A53F-7703A9C3BFED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{520AD80C-9C18-44CB-85AB-18A04C7D41D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{520AD80C-9C18-44CB-85AB-18A04C7D41D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{520AD80C-9C18-44CB-85AB-18A04C7D41D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{520AD80C-9C18-44CB-85AB-18A04C7D41D1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6E024A6D-ED64-49C7-9F1C-54800B9292C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6E024A6D-ED64-49C7-9F1C-54800B9292C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E024A6D-ED64-49C7-9F1C-54800B9292C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -49,9 +43,11 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F156F26F-6B62-44C3-A53F-7703A9C3BFED} = {D5F916DA-2A0B-4B72-854A-D19FDFF0C2EF}
-		{520AD80C-9C18-44CB-85AB-18A04C7D41D1} = {5CF6B4C7-248A-44EB-9B78-9DC5C7E004C4}
 		{6E024A6D-ED64-49C7-9F1C-54800B9292C0} = {5CF6B4C7-248A-44EB-9B78-9DC5C7E004C4}
 		{95003460-2CF1-4CC4-9089-194B8C570A34} = {5CF6B4C7-248A-44EB-9B78-9DC5C7E004C4}
 		{3A17280E-7BA2-4219-8E76-F45CBAB12144} = {5CF6B4C7-248A-44EB-9B78-9DC5C7E004C4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E0C5B042-0A90-4794-8105-91387DFBCB8D}
 	EndGlobalSection
 EndGlobal
