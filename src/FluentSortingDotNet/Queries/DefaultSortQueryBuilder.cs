@@ -1,8 +1,8 @@
-﻿using System;
+﻿using FluentSortingDotNet.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using FluentSortingDotNet.Internal;
 
 namespace FluentSortingDotNet.Queries;
 
@@ -10,9 +10,8 @@ namespace FluentSortingDotNet.Queries;
 /// Represents a class that can build a sort query.
 /// </summary>
 /// <typeparam name="T">The type of items to sort.</typeparam>
-public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>, ISortQuery<T>
+public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>
 {
-    private bool _built;
     private readonly List<SortExpression> _sortExpressions = new();
 
     /// <inheritdoc />
@@ -28,50 +27,48 @@ public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>, ISortQuer
     /// <inheritdoc />
     public ISortQuery<T> Build()
     {
-        if (IsEmpty)
-            throw new InvalidOperationException("No sorting expressions have been added.");
-
-        _built = true;
-        return this;
-    }
-
-    /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">Thrown when the query has not been built.</exception>
-    public IQueryable<T> Apply(IQueryable<T> query)
-    {
-        if (!_built)
-            throw new InvalidOperationException("Cannot apply sorting to an unbuilt query.");
-
-        IOrderedQueryable<T>? orderedQuery = null;
-
-        foreach (SortExpression expression in _sortExpressions)
-        {
-            if (orderedQuery == null)
-            {
-                orderedQuery = expression.SortDirection switch
-                {
-                    SortDirection.Ascending => query.OrderBy(expression.Expression),
-                    SortDirection.Descending => query.OrderByDescending(expression.Expression),
-                    _ => throw new ArgumentOutOfRangeException(nameof(expression.SortDirection))
-                };
-            }
-            else
-            {
-                orderedQuery = expression.SortDirection switch
-                {
-                    SortDirection.Ascending => orderedQuery.ThenBy(expression.Expression),
-                    SortDirection.Descending => orderedQuery.ThenByDescending(expression.Expression),
-                    _ => throw new ArgumentOutOfRangeException(nameof(expression.SortDirection))
-                };
-            }
-        }
-
-        return orderedQuery ?? query;
+        return IsEmpty
+            ? throw new InvalidOperationException("No sorting expressions have been added.")
+            : new SortQuery(_sortExpressions);
     }
 
     private sealed class SortExpression(LambdaExpression expression, SortDirection sortDirection)
     {
         public LambdaExpression Expression { get; } = expression;
         public SortDirection SortDirection { get; } = sortDirection;
+    }
+
+    private sealed class SortQuery(List<SortExpression> sortExpressions) : ISortQuery<T>
+    {
+        private readonly List<SortExpression> _sortExpressions = sortExpressions;
+
+        public IQueryable<T> Apply(IQueryable<T> query)
+        {
+            IOrderedQueryable<T>? orderedQuery = null;
+
+            foreach (SortExpression expression in _sortExpressions)
+            {
+                if (orderedQuery == null)
+                {
+                    orderedQuery = expression.SortDirection switch
+                    {
+                        SortDirection.Ascending => query.OrderBy(expression.Expression),
+                        SortDirection.Descending => query.OrderByDescending(expression.Expression),
+                        _ => throw new InvalidOperationException("Invalid sort direction.")
+                    };
+                }
+                else
+                {
+                    orderedQuery = expression.SortDirection switch
+                    {
+                        SortDirection.Ascending => orderedQuery.ThenBy(expression.Expression),
+                        SortDirection.Descending => orderedQuery.ThenByDescending(expression.Expression),
+                        _ => throw new InvalidOperationException("Invalid sort direction.")
+                    };
+                }
+            }
+
+            return orderedQuery ?? query;
+        }
     }
 }

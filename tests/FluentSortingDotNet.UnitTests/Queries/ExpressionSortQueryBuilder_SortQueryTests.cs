@@ -3,8 +3,8 @@ using FluentSortingDotNet.Testing;
 
 namespace FluentSortingDotNet.Tests.Queries;
 
-public class DefaultSortQueryBuilderTests : SortQueryBuilderTests
+public class ExpressionSortQueryBuilder_SortQueryTests : SortQueryBuilder_SortQueryTest
 {
     protected override ISortQueryBuilder<Person> CreateSortQueryBuilder()
-        => new DefaultSortQueryBuilder<Person>();
+        => new ExpressionSortQueryBuilder<Person>();
 }

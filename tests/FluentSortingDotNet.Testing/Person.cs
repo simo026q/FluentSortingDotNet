@@ -1,15 +1,22 @@
-﻿using Bogus;
+﻿using System.Diagnostics;
 
 namespace FluentSortingDotNet.Testing;
 
+[DebuggerDisplay("{Name} ({Age})")]
 public sealed class Person
 {
-    public static readonly Faker<Person> Faker = new Faker<Person>()
-        .RuleFor(p => p.Name, f => f.Person.FullName)
-        .RuleFor(p => p.Age, f => f.Random.Int(18, 65));
+    public Person()
+    {
+    }
 
+    public Person(string name, DateTimeOffset dateOfBirth)
+    {
+        Name = name;
+        DateOfBirth = dateOfBirth;
+    }
+
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
-    public int Age { get; set; }
-
-    public override string ToString() => $"{Name} ({Age})";
+    public DateTimeOffset DateOfBirth { get; set; }
+    public int Age => DateTimeOffset.UtcNow.Year - DateOfBirth.Year;
 }

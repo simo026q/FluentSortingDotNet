@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 [MemoryDiagnoser(false)]
 public class QueryBuilderBenchmarks
 {
-    public static readonly IQueryable<Person> People = Person.Faker.UseSeed(2024).Generate(10).AsQueryable();
+    public static readonly IQueryable<Person> People = PersonGenerator.Instance.UseSeed(2024).Generate(10).AsQueryable();
 
     public static readonly LambdaExpression NameExpression = (Expression<Func<Person, string>>)(p => p.Name);
     public static readonly LambdaExpression AgeExpression = (Expression<Func<Person, int>>)(p => p.Age);
