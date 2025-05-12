@@ -166,10 +166,10 @@ It has a slightly worse performance (when using a sort query string) than callin
 The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
 Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
 
-![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.3.png "Query building benchmark results")
+**TODO: Insert benchmark results table**
 
 #### Parsing
 
 The parsing has no real-world impact on performance.
 
-![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.3.png "Parsing benchmark results")
+**TODO: Insert benchmark results table**
