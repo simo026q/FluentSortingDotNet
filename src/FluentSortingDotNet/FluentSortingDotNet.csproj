@@ -9,7 +9,7 @@
 	<Title>FluentSorting.NET</Title>
 	<Authors>Scantalk ApS, simo026q</Authors>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<Version>1.1.0</Version>
+	<Version Condition="'$(PackageVersion)' == ''">0.0.0-dev</Version>
 	<NeutralLanguage>en</NeutralLanguage>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<Copyright>© 2024 simo026q</Copyright>

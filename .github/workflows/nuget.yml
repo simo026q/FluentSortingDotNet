@@ -18,14 +18,19 @@ jobs:
       with:
         dotnet-version: '9.0.x' # adjust based on your project
 
+    - name: Extract version from tag
+      id: vars
+      run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/FluentSortingDotNet
 
     - name: Build project
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build src/FluentSortingDotNet --configuration Release --no-restore
 
     - name: Pack NuGet package
-      run: dotnet pack --configuration Release --no-build --output ./nupkg
+      run: dotnet pack src/FluentSortingDotNet --configuration Release --no-build --output ./nupkg /p:PackageVersion=${{ steps.vars.outputs.version }}
 
     - name: Push package to NuGet
-      run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push "./nupkg/FluentSortingDotNet.${{ steps.vars.outputs.version }}.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
