@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FluentSortingDotNet.Benchmarks": {
+      "commandName": "Project",
+      "commandLineArgs": "All"
+    }
+  }
+}

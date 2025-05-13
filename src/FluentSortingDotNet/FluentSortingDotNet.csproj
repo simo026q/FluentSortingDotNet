@@ -18,7 +18,7 @@
 	<Description>Apply sorting from a string (e.g. query string) with a FluentValidation-like API.</Description>
 	<PackageTags>sorting, fluent, query, string, linq, order, by</PackageTags>
   </PropertyGroup>
-
+	
   <ItemGroup>
     <None Include="..\..\LICENSE.txt">
       <Pack>True</Pack>
@@ -32,6 +32,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<InternalsVisibleTo Include="FluentSortingDotNet.Tests" />
   </ItemGroup>
 
 </Project>

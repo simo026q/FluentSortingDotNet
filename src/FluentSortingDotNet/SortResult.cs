@@ -1,4 +1,5 @@
 ﻿using FluentSortingDotNet.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +8,7 @@ namespace FluentSortingDotNet;
 /// <summary>
 /// Represents the result of a sort operation.
 /// </summary>
+[Obsolete("This class is obsolete and will be removed in a future version. Use the new sorting API instead.", error: false)]
 public readonly struct SortResult
 {
     private static readonly IEnumerable<string> EmptySortParameters = Enumerable.Empty<string>();

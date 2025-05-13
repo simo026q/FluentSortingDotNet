@@ -2,13 +2,13 @@
 using FluentSortingDotNet;
 using FluentSortingDotNet.Parsers;
 
-[MemoryDiagnoser(false)]
+[MemoryDiagnoser(false), MarkdownExporter]
 public class ParserBenchmarks
 {
     [Params("a", "-a,b", "a,b,-c,d,-e,-f,g")]
-    public string Query { get; set; }
+    public string Query { get; set; } = null!;
 
-    private readonly DefaultSortParameterParser DefaultParser = DefaultSortParameterParser.Instance;
+    private static readonly DefaultSortParameterParser DefaultParser = DefaultSortParameterParser.Instance;
 
     [Benchmark]
     public SortParameter ParseFirst()

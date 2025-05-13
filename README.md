@@ -34,17 +34,20 @@ public record Person(string Name, int Age);
 ```csharp
 using FluentSortingDotNet;
 
-public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser) // The Sorter class also have an empty constructor that uses the DefaultSortParameterParser
+public sealed class PersonSorter : Sorter<Person>
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
-        // when no parameters are provided, sort by name descending
-        builder.ForParameter(p => p.Name).WithName("name").IsDefault(direction: SortDirection.Descending);
+        // When no parameters are provided, sort by name descending
+        builder.ForParameter(p => p.Name).IsDefault(direction: SortDirection.Descending);
 
-        builder.ForParameter(p => p.DateOfBirth).WithName("age");
+        builder.ForParameter(p => p.DateOfBirth).WithName("age").ReverseDirection();
 
-        // ignore case when sorting by name
+        // Ignore case when sorting by name
         builder.IgnoreParameterCase();
+
+        // Ignore invalid parameters instead of throwing an exception when not validated with PersonSorter.Validate(string)
+        builder.IgnoreInvalidParameters();
     }
 }
 ```
@@ -54,27 +57,25 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
 ```csharp
 using FluentSortingDotNet;
 
-var sorter = new PersonSorter(DefaultSortParameterParser.Instance);
+PersonSorter sorter = new();
+
+SortContext sortContext = sorter.Validate("name,-age");
+
+if (!sortContext.IsValid) 
+{
+    Console.WriteLine($"Invalid sort parameters: {string.Join(", ", sortContext.InvalidParameters)}");
+    return;
+}
 
 IQueryable<Person> peopleQuery = ...;
 
-SortResult result = sorter.Sort(ref peopleQuery, "name,-age");
-
-if (result.IsSuccess)
-{
-    var orderedPeople = peopleQuery.ToList();
-}
-else 
-{
-    Console.WriteLine($"Invalid sort parameters: {string.Join(", ", result.InvalidSortParameters)}");
-}
+IQueryable<Person> sortedQuery = sorter.Sort(peopleQuery, sortContext);
 ```
 
 ### Dependency Injection
 
 ```csharp
-services.AddSingleton<ISortParameterParser>(DefaultSortParameterParser.Instance);
-services.AddSingleton<PersonSorter>();
+services.AddSingleton<ISorter<Person>, PersonSorter>();
 ```
 
 ## Extensibility
@@ -163,10 +164,18 @@ It has a slightly worse performance (when using a sort query string) than callin
 The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
 Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
 
-![Query building benchmark results](tests/FluentSortingDotNet.Benchmarks/query-builder-1.0.0-rc.3.png "Query building benchmark results")
+| Method   | Mean     | Error   | StdDev  | Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |---------:|--------:|--------:|------:|--------:|----------:|------------:|
+| Default  | 465.9 μs | 6.89 μs | 6.45 μs |  0.98 |    0.02 |  16.78 KB |        0.94 |
+| Compiled | 470.9 μs | 6.06 μs | 5.67 μs |  0.99 |    0.02 |  16.67 KB |        0.94 |
+| Linq     | 474.9 μs | 6.39 μs | 5.98 μs |  1.00 |    0.02 |  17.82 KB |        1.00 |
 
 #### Parsing
 
 The parsing has no real-world impact on performance.
 
-![Parsing benchmark results](tests/FluentSortingDotNet.Benchmarks/parser-1.0.0-rc.3.png "Parsing benchmark results")
+| Method     | Query            | Mean     | Error    | StdDev   | Allocated |
+|----------- |----------------- |---------:|---------:|---------:|----------:|
+| **ParseFirst** | **-a,b**             | **16.58 ns** | **0.209 ns** | **0.196 ns** |      **24 B** |
+| **ParseFirst** | **a**                | **16.94 ns** | **0.074 ns** | **0.061 ns** |      **24 B** |
+| **ParseFirst** | **a,b,-c,d,-e,-f,g** | **16.63 ns** | **0.153 ns** | **0.143 ns** |      **24 B** |

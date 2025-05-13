@@ -1,6 +1,6 @@
 ﻿using FluentSortingDotNet.Parsers;
 
-namespace FluentSortingDotNet.UnitTests.Parser;
+namespace FluentSortingDotNet.Tests.Parsers;
 
 public class DefaultSortParameterParserTests
 {
