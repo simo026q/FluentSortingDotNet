@@ -166,10 +166,18 @@ It has a slightly worse performance (when using a sort query string) than callin
 The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
 Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
 
-**TODO: Insert benchmark results table**
+| Method   | Mean     | Error   | StdDev  | Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |---------:|--------:|--------:|------:|--------:|----------:|------------:|
+| Default  | 465.9 μs | 6.89 μs | 6.45 μs |  0.98 |    0.02 |  16.78 KB |        0.94 |
+| Compiled | 470.9 μs | 6.06 μs | 5.67 μs |  0.99 |    0.02 |  16.67 KB |        0.94 |
+| Linq     | 474.9 μs | 6.39 μs | 5.98 μs |  1.00 |    0.02 |  17.82 KB |        1.00 |
 
 #### Parsing
 
 The parsing has no real-world impact on performance.
 
-**TODO: Insert benchmark results table**
+| Method     | Query            | Mean     | Error    | StdDev   | Allocated |
+|----------- |----------------- |---------:|---------:|---------:|----------:|
+| **ParseFirst** | **-a,b**             | **16.58 ns** | **0.209 ns** | **0.196 ns** |      **24 B** |
+| **ParseFirst** | **a**                | **16.94 ns** | **0.074 ns** | **0.061 ns** |      **24 B** |
+| **ParseFirst** | **a,b,-c,d,-e,-f,g** | **16.63 ns** | **0.153 ns** | **0.143 ns** |      **24 B** |
