@@ -34,15 +34,14 @@ public record Person(string Name, int Age);
 ```csharp
 using FluentSortingDotNet;
 
-// The Sorter class also have a overload with an empty constructor that uses the DefaultSortParameterParser
-public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(parser)
+public sealed class PersonSorter : Sorter<Person>
 {
     protected override void Configure(SortBuilder<Person> builder)
     {
         // When no parameters are provided, sort by name descending
         builder.ForParameter(p => p.Name).IsDefault(direction: SortDirection.Descending);
 
-        builder.ForParameter(p => p.DateOfBirth).WithName("age");
+        builder.ForParameter(p => p.DateOfBirth).WithName("age").ReverseDirection();
 
         // Ignore case when sorting by name
         builder.IgnoreParameterCase();
@@ -58,7 +57,7 @@ public sealed class PersonSorter(ISortParameterParser parser) : Sorter<Person>(p
 ```csharp
 using FluentSortingDotNet;
 
-PersonSorter sorter = new(DefaultSortParameterParser.Instance);
+PersonSorter sorter = new();
 
 SortContext sortContext = sorter.Validate("name,-age");
 
@@ -76,7 +75,6 @@ IQueryable<Person> sortedQuery = sorter.Sort(peopleQuery, sortContext);
 ### Dependency Injection
 
 ```csharp
-services.AddSingleton<ISortParameterParser>(DefaultSortParameterParser.Instance);
 services.AddSingleton<ISorter<Person>, PersonSorter>();
 ```
 
