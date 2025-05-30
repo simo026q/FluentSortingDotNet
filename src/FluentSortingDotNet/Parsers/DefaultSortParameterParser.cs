@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace FluentSortingDotNet.Parsers;
 
@@ -19,15 +20,16 @@ public sealed class DefaultSortParameterParser : SortParameterParser
         => query.IndexOf(',');
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool TryParseParameter(ReadOnlySpan<char> parameter, out SortParameter sortParameter)
     {
-        SortDirection direction = SortDirection.Ascending;
-
         if (parameter.IsEmpty)
         {
             sortParameter = SortParameter.Empty;
             return false;
         }
+
+        SortDirection direction = SortDirection.Ascending;
 
         if (parameter[0] == '-')
         {
