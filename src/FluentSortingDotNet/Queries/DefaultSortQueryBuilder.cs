@@ -50,21 +50,15 @@ public sealed class DefaultSortQueryBuilder<T> : ISortQueryBuilder<T>
             {
                 if (orderedQuery == null)
                 {
-                    orderedQuery = expression.SortDirection switch
-                    {
-                        SortDirection.Ascending => query.OrderBy(expression.Expression),
-                        SortDirection.Descending => query.OrderByDescending(expression.Expression),
-                        _ => throw new InvalidOperationException("Invalid sort direction.")
-                    };
+                    orderedQuery = expression.SortDirection == SortDirection.Ascending
+                        ? query.OrderBy(expression.Expression)
+                        : query.OrderByDescending(expression.Expression);
                 }
                 else
                 {
-                    orderedQuery = expression.SortDirection switch
-                    {
-                        SortDirection.Ascending => orderedQuery.ThenBy(expression.Expression),
-                        SortDirection.Descending => orderedQuery.ThenByDescending(expression.Expression),
-                        _ => throw new InvalidOperationException("Invalid sort direction.")
-                    };
+                    orderedQuery = expression.SortDirection == SortDirection.Ascending
+                        ? orderedQuery.ThenBy(expression.Expression)
+                        : orderedQuery.ThenByDescending(expression.Expression);
                 }
             }
 
