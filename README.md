@@ -164,18 +164,19 @@ It has a slightly worse performance (when using a sort query string) than callin
 The performance is slightly better when sorting on the default sort parameters since the query is precompiled.
 Both of the benchmarked query builders allocate a bit less memory since the expressions are reused.
 
-| Method   | Mean     | Error   | StdDev  | Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------- |---------:|--------:|--------:|------:|--------:|----------:|------------:|
-| Default  | 465.9 μs | 6.89 μs | 6.45 μs |  0.98 |    0.02 |  16.78 KB |        0.94 |
-| Compiled | 470.9 μs | 6.06 μs | 5.67 μs |  0.99 |    0.02 |  16.67 KB |        0.94 |
-| Linq     | 474.9 μs | 6.39 μs | 5.98 μs |  1.00 |    0.02 |  17.82 KB |        1.00 |
+| Method                  | Mean     | Error     | StdDev    | Ratio | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|------------------------ |---------:|----------:|----------:|------:|-------:|-------:|----------:|------------:|
+| QueryBuilder_Default    | 3.901 μs | 0.0114 μs | 0.0095 μs |  0.86 | 0.4501 |      - |   4.62 KB |        0.78 |
+| QueryBuilder_Expression | 3.709 μs | 0.0121 μs | 0.0107 μs |  0.82 | 0.4387 | 0.0038 |    4.5 KB |        0.76 |
+| EF_Linq                 | 4.549 μs | 0.0174 μs | 0.0154 μs |  1.00 | 0.5798 |      - |   5.94 KB |        1.00 |
+| EF_Compiled             | 1.434 μs | 0.0040 μs | 0.0033 μs |  0.32 | 0.1335 |      - |   1.38 KB |        0.23 |
 
 #### Parsing
 
 The parsing has no real-world impact on performance.
 
-| Method     | Query            | Mean     | Error    | StdDev   | Allocated |
-|----------- |----------------- |---------:|---------:|---------:|----------:|
-| **ParseFirst** | **-a,b**             | **16.58 ns** | **0.209 ns** | **0.196 ns** |      **24 B** |
-| **ParseFirst** | **a**                | **16.94 ns** | **0.074 ns** | **0.061 ns** |      **24 B** |
-| **ParseFirst** | **a,b,-c,d,-e,-f,g** | **16.63 ns** | **0.153 ns** | **0.143 ns** |      **24 B** |
+| Method     | Query            | Mean     | Error     | StdDev    | Allocated |
+|----------- |----------------- |---------:|----------:|----------:|----------:|
+| ParseFirst | -a,b             | 6.893 ns | 0.0395 ns | 0.0370 ns |      24 B |
+| ParseFirst | a,-b             | 6.203 ns | 0.0139 ns | 0.0130 ns |      24 B |
+| ParseFirst | a,b,-c,d,-e,-f,g | 6.442 ns | 0.0276 ns | 0.0230 ns |      24 B |

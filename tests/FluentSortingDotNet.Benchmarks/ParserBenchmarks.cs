@@ -5,7 +5,7 @@ using FluentSortingDotNet.Parsers;
 [MemoryDiagnoser(false), MarkdownExporter]
 public class ParserBenchmarks
 {
-    [Params("a", "-a,b", "a,b,-c,d,-e,-f,g")]
+    [Params("a,-b", "-a,b", "a,b,-c,d,-e,-f,g")]
     public string Query { get; set; } = null!;
 
     private static readonly DefaultSortParameterParser DefaultParser = DefaultSortParameterParser.Instance;
@@ -20,6 +20,6 @@ public class ParserBenchmarks
             return sortParameter;
         }
 
-        return SortParameter.Empty;
+        throw new InvalidOperationException("Failed to parse the first sort parameter.");
     }
 }
